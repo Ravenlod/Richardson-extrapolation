@@ -8,7 +8,7 @@
 double funk(int i, double x, double *y);
 void solveODE(int n, double a, double b, double e, int k, double *y0, double **result);
 
-
+//Структура, содержащая элементы таблицы Бутчера для классического метода Рунге-Кутты (4 порядка)
 struct Runge
 {
     int k;
