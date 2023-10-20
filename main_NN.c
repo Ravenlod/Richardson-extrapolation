@@ -7,6 +7,7 @@
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
+double* solveRunge(int n, double a, double b, double e, int k, double* y0);
 
 
 struct Runge
@@ -53,12 +54,12 @@ int main() {
     */
     double temp[] = { 1,-2 };
     solveODE(2, 0, 20, 0.01, k, temp, result);
-    for (int i = 0; i <= k; i++) {
+    /*for (int i = 0; i <= k; i++) {
         for (int j = 0; j < n + 1; j++) {
             printf("%lf ", result[i][j]);
         }
         printf("\n");
-    }
+    }*/
 
 
     return 0;
@@ -81,8 +82,16 @@ double funk(int i, double x, double* y) {
     return result;
 }
 
-void solveODE(int n, double a, double b, double e, int k, double* y0, double** result) {}
-double solveRunge(int n, double a, double b, double e, int k, double* y0, double** result) {
+void solveODE(int n, double a, double b, double e, int k, double* y0, double** result) {
+    double* myResult;
+    myResult = (double*)malloc((n+1) * sizeof(double));
+    myResult = solveRunge(n, a, b, e, k, y0, result);
+    for (int i = 0; i < n + 1; i++) {
+        printf("%lf ", myResult[i]);
+    }
+
+}
+double* solveRunge(int n, double a, double b, int k, double* y0) {
     struct Runge Runge;
     Runge.a2 = 0.2;
     Runge.a3 = 0.6;
@@ -187,14 +196,12 @@ double solveRunge(int n, double a, double b, double e, int k, double* y0, double
         }
         //printf("\n");
 
-        for (int j = 0; j < n + 1; j++) {
+       /* for (int j = 0; j < n + 1; j++) {
             result[i][j] = result_line[j];
-        }
+        }*/
         x_temp = x_temp + h;
     }
 
-    for (int i = 0; i < n + 1; i++) {
-        output[i];
-    }
-
+    
+    return result_line;
 }
