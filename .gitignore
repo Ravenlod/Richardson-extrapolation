@@ -1,0 +1,6 @@
+git.sln
+git.vcxproj
+/.vs
+/Debug
+git.vcxproj.filters
+git.vcxproj.user

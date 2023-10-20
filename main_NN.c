@@ -5,10 +5,10 @@
 #include <stdlib.h>
 
 //#include "odu_NN.h"
-double funk(int i, double x, double *y);
-void solveODE(int n, double a, double b, double e, int k, double *y0, double **result);
+double funk(int i, double x, double* y);
+void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
 
-//Структура, содержащая элементы таблицы Бутчера для классического метода Рунге-Кутты (4 порядка)
+
 struct Runge
 {
     int k;
@@ -16,17 +16,17 @@ struct Runge
 };
 
 int main() {
-    
 
 
-    int n=2;       
-    double a, b; 
-    double e;    
-    int k=50;       
-    double *y0;  
+
+    int n = 2;
+    double a, b;
+    double e;
+    int k = 50;
+    double* y0;
     double** result;
-    
-    result = (double**)malloc((k+1) * sizeof(double*));
+
+    result = (double**)malloc((k + 1) * sizeof(double*));
 
     for (int i = 0; i <= k; i++) {
         result[i] = (double*)malloc((n + 1) * sizeof(double));
@@ -35,22 +35,22 @@ int main() {
 
 
     // Чтение входных данных из файла
-    FILE *input = fopen("input.txt", "r");
+    FILE* input = fopen("input.txt", "r");
     if (input == NULL) {
         fprintf(stderr, "Ошибка открытия файла входных данных.\n");
         return 1;
     }
 
-   /* fscanf(input, "%d %lf %lf %lf %d", &n, &a, &b, &e, &k);
+    /* fscanf(input, "%d %lf %lf %lf %d", &n, &a, &b, &e, &k);
 
-    y0 = (double *)malloc(n * sizeof(double));
-    if (y0 == NULL) {
-        fprintf(stderr, "Ошибка выделения памяти.\n");
-        fclose(input);
-        return 1;
-    }
-    fscanf(input, "%lf", &y0[0]);
-   */ 
+     y0 = (double *)malloc(n * sizeof(double));
+     if (y0 == NULL) {
+         fprintf(stderr, "Ошибка выделения памяти.\n");
+         fclose(input);
+         return 1;
+     }
+     fscanf(input, "%lf", &y0[0]);
+    */
     double temp[] = { 1,-2 };
     solveODE(2, 0, 20, 0.01, k, temp, result);
     for (int i = 0; i <= k; i++) {
@@ -60,39 +60,41 @@ int main() {
         printf("\n");
     }
 
-   
+
     return 0;
 }
 double funk(int i, double x, double* y) {
     double result;
-    
+
     switch (i) {
-        case 0:
-            result = sin(x) * y[0] + cos(x)*y[1];  // Пример: y'[0] = x * y[0]
-            break;
-        case 1:
-            result = sin(x) * y[1] + cos(x) * y[0];  // Пример: y'[1] = sin(x) * y[1]
-            break;
-        default:
-            return NAN;
+    case 0:
+        result = sin(x) * y[0] + cos(x) * y[1];  // Пример: y'[0] = x * y[0]
+        break;
+    case 1:
+        result = sin(x) * y[1] + cos(x) * y[0];  // Пример: y'[1] = sin(x) * y[1]
+        break;
+    default:
+        return NAN;
         // Добавьте обработку других функций, если есть
     }
 
     return result;
 }
-void solveODE(int n, double a, double b, double e, int k, double* y0, double** result) {
+
+void solveODE(int n, double a, double b, double e, int k, double* y0, double** result) {}
+double solveRunge(int n, double a, double b, double e, int k, double* y0, double** result) {
     struct Runge Runge;
     Runge.a2 = 0.2;
     Runge.a3 = 0.6;
     Runge.a4 = 1;
     Runge.b21 = Runge.a2;
-    
+
     Runge.b32 = (Runge.a3 * (Runge.a3 - Runge.a2)) / (2 * Runge.a2 * (1 - 2 * Runge.a2));
     Runge.b31 = Runge.a3 - Runge.b32;
-    
-   
-    
-   
+
+
+
+
     Runge.c2 = (2 * Runge.a3 - 1) / (12 * Runge.a2 * (Runge.a3 - Runge.a2) * (1 - Runge.a2));
     Runge.c3 = (2 * Runge.a2 - 1) / (12 * Runge.a3 * (Runge.a2 - Runge.a3) * (1 - Runge.a3));
     Runge.c4 = (6 * Runge.a2 * Runge.a3 - 4 * Runge.a2 - 4 * Runge.a3 + 3) / (12 * (1 - Runge.a2) * (1 - Runge.a3));
@@ -102,15 +104,17 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     Runge.b43 = (Runge.c3 * (1 - Runge.a3)) / Runge.c4;
     Runge.b41 = 1 - Runge.b42 - Runge.b43;
 
-       double h = (b - a) / k;
+    double h = (b - a) / k;
 
     double* f_result;
     double x_temp;
-    
-    double* y_temp, *y_new_temp, * y_super_new_temp;
+
+    double* y_temp, * y_new_temp, * y_super_new_temp;
     double* k1_line, * k2_line, * k3_line, * k4_line;
     double* result_line;
-    
+
+    double* output;
+
     y_temp = (double*)malloc(n * sizeof(double));
     y_new_temp = (double*)malloc(n * sizeof(double));
     y_super_new_temp = (double*)malloc(n * sizeof(double));
@@ -118,15 +122,16 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     k2_line = (double*)malloc(n * sizeof(double));
     k3_line = (double*)malloc(n * sizeof(double));
     k4_line = (double*)malloc(n * sizeof(double));
-    
-    result_line = (double*)malloc((n+1) * sizeof(double));
+
+    result_line = (double*)malloc((n + 1) * sizeof(double));
+    output = (double*)malloc((n + 1) * sizeof(double));
 
     for (int i = 0; i < n; i++) {
         y_temp[i] = y0[i];
     }
 
     x_temp = a;
-   
+
     f_result = (double*)malloc(k * sizeof(double));
     for (int i = 0; i < k + 1; i++) {
 
@@ -181,13 +186,15 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
             //printf("%lf| %lf| ", y_temp[j], k4_line[j]);
         }
         //printf("\n");
-        
+
         for (int j = 0; j < n + 1; j++) {
             result[i][j] = result_line[j];
         }
         x_temp = x_temp + h;
     }
-       
-    
-    
+
+    for (int i = 0; i < n + 1; i++) {
+        output[i];
+    }
+
 }
