@@ -10,6 +10,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 double* solveRunge(int n, double a, double b,  int k, double* y0);
 int recursiveSearch(int x, int y, int n, double matrix[][5]);
 
+}
 
 struct Runge
 {
