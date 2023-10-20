@@ -7,7 +7,8 @@
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
-double* solveRunge(int n, double a, double b, double e, int k, double* y0);
+double* solveRunge(int n, double a, double b,  int k, double* y0);
+int recursiveSearch(int x, int y, int n, double matrix[][5]);
 
 
 struct Runge
@@ -60,8 +61,21 @@ int main() {
         }
         printf("\n");
     }*/
+    int hLine[] = {2,4};
+    int ratio = 2;
+    double matrix[5][5] = { {4,	3,	-2,	5,	-7},{-3,2,	4,	-5,	2},{5,	2,	5,	-3,	6},{-2,	9,	-7,	3,	2},{-6,	2,	4,	-1,	8} };
 
-
+    /*double** matrix;
+    matrix = (double**)malloc(n * sizeof(double*));
+    for (int i = 0; i < n; i++) {
+        matrix[i] = (double*)malloc(n * sizeof(double));
+    }
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = exp(ratio * (j + 1) * hLine[i]);
+        }
+    }*/
+    recursiveSearch(0,0,5,matrix);
     return 0;
 }
 double funk(int i, double x, double* y) {
@@ -82,10 +96,53 @@ double funk(int i, double x, double* y) {
     return result;
 }
 
+void jacobiIterationMethod(int n, double* leftLine, int* hLine) {
+    int ratio=2;
+    double** matrix;
+    matrix = (double**)malloc(n * sizeof(double*));
+    for (int i = 0; i < n; i++) {
+        matrix[i] = (double*)malloc(n * sizeof(double));
+    }
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = exp(ratio * (j + 1) * hLine[i]);
+        }
+    }
+    
+}
+
+int recursiveSearch(int x, int y, int n, double matrix[][5]) {
+    double sin, cos;
+    double** copyMatrix;
+    copyMatrix = (double**)malloc(n * sizeof(double*));
+    for (int i = 0; i < n; i++) {
+        copyMatrix[i] = (double*)malloc(n * sizeof(double));
+    }
+    printf("\n ");
+    cos = matrix[x][y]/(sqrt(matrix[x][y] * matrix[x][y] + matrix[x+1][y] * matrix[x+1][y]));
+    sin = matrix[x + 1][y ] * cos / matrix[x][y];
+    //printf("%lf|%lf ", cos, sin);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            copyMatrix[i][j] = matrix[i][j];
+        }
+    }
+    for (int i = 0; i < n-1; i++) {
+        for (int j = 0; j < n; j++) {
+            copyMatrix[x][j] = matrix[x][j] * cos + matrix[x+1][j] * sin;
+            copyMatrix[x + i + 1][j] = -matrix[x][j] * sin + matrix[x + 1][j] * cos;
+            printf("%lf|%lf ", copyMatrix[x][j], copyMatrix[x + i + 1][j]);
+        }
+        printf("\n ");
+    }
+            
+    return 1;
+}
+
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result) {
     double* myResult;
     myResult = (double*)malloc((n+1) * sizeof(double));
-    myResult = solveRunge(n, a, b, e, k, y0, result);
+    myResult = solveRunge(n, a, b, k, y0);
     for (int i = 0; i < n + 1; i++) {
         printf("%lf ", myResult[i]);
     }
