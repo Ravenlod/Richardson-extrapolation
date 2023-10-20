@@ -7,8 +7,26 @@
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
-double* solveRunge(int n, double a, double b, double e, int k, double* y0);
+double* solveRunge(int n, double a, double b, int k, double* y0);
 
+/*n - количество уравнений в системе, h - диаметр разбиения*/
+double eqSystem(int n, double h)
+{
+    double** matrix;
+    matrix = (double**)malloc(n * sizeof(double*));
+    for(int i = 0; i < n; i ++)
+    {
+        matrix[i] = (double*)malloc((n + 1) * sizeof(double));
+    }
+    for(int i = 0; i < n; i ++)
+    {
+        for(int j = 0; j < n; j ++)
+        {
+            matrix[i][j] = exp(2*(j + 1) * h);
+        }
+    }
+
+}
 
 struct Runge
 {
