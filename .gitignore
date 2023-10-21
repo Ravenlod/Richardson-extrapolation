@@ -1,6 +1,11 @@
-git.sln
-git.vcxproj
+# Файлы, автоматически созданные Visual Studio
 /.vs
 /Debug
+git.sln
+git.vcxproj
 git.vcxproj.filters
 git.vcxproj.user
+
+# Файлы, автоматически созданные VS Code
+/.vscode
+main_NN
