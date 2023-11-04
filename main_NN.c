@@ -9,6 +9,7 @@ double funk(int i, double x, double* y);
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
 double* solveRunge(int n, double a, double b,  int k, double* y0);
 int recursiveSearch(int pos, int n, double matrix[][6]);
+void systemOfLinearFunctions(int n, double* leftLine, int* hLine);
 
 
 
@@ -26,7 +27,7 @@ int main()
     int n = 5;
     double a, b;
     double e;
-    int k = 50;
+    int k = 10;
     double* y0;
     double** result;
 
@@ -57,20 +58,9 @@ int main()
      }
      fscanf(input, "%lf", &y0[0]);
     */
-    double temp[] = { 1,-2 };
-    solveODE(2, 0, 20, 0.01, k, temp, result);
-    /*for (int i = 0; i <= k; i++) {
-        for (int j = 0; j < n + 1; j++) {
-            printf("%lf ", result[i][j]);
-        }
-        printf("\n");
-    }*/
-    int hLine[] = {2,4};
-    int ratio = 2;
-    double matrix[5][6] = { {4,	3,	-2,	5,	-7,73}, {-3,2,	4,	-5,	2,-40}, {5,	2,	5,	-3,	6,-77},
-                            {-2, 9,	-7,	3,	2,66}, {-6,	2,	4,	-1,	8,-54}};
-    double* ALine;//массив коэфициенттов для решённой системы matrix
-    ALine = (double*)malloc(n * sizeof(double));
+    double y0Line[] = { 1,-2 };
+    solveODE(n, 0, 20, 0.01, k, y0Line, result);
+
     /*double** matrix;
     matrix = (double**)malloc(n * sizeof(double*));
     for (int i = 0; i < n; i++) {
@@ -81,16 +71,7 @@ int main()
             matrix[i][j] = exp(ratio * (j + 1) * hLine[i]);
         }
     }*/
-    recursiveSearch(0,n,matrix);
-    printf("*********************************\n");
-    for (int i = 0; i < n; i++) 
-    {
-        for (int j = 0; j < n + 1; j++) 
-        {
-            printf("%lf ", matrix[i][j]);
-        }
-        printf("\n");
-    }
+    
 
     return 0;
 }
@@ -113,7 +94,7 @@ double funk(int i, double x, double* y)
     return result;
 }
 
-void jacobiIterationMethod(int n, double* leftLine, int* hLine) 
+void systemOfLinearFunctions(int n, double* leftLine, int* hLine) 
 {
     int ratio=2;
     double** matrix;
@@ -214,9 +195,26 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     myResult = (double*)malloc((n + 1) * sizeof(double));
     //Call the Runge-Kutta method to solve the ODE
     myResult = solveRunge(n, a, b, k, y0);
-    /* for (int i = 0; i < n + 1; i ++) {
-        printf("%lf ", myResult[i]);
-    } */
+
+    double matrix[5][6] = { {4,	3,	-2,	5,	-7,73}, {-3,2,	4,	-5,	2,-40}, {5,	2,	5,	-3,	6,-77},
+                            {-2, 9,	-7,	3,	2,66}, {-6,	2,	4,	-1,	8,-54}};
+    //массив коэффициентов для решённой системы matrix
+    double* ALine;
+    ALine = (double*)malloc(n * sizeof(double));
+    recursiveSearch(0,n,matrix);
+    printf("*********************************\n");
+    for (int i = 0; i < n; i++) 
+    {
+        for (int j = 0; j < n + 1; j++) 
+        {
+            printf("%lf ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+
+    ALine[n - 1] = matrix[n - 1][n]/matrix[n - 1][n - 1];
+    ALine[n - 2] = matrix[n - 2][n]/(matrix[n - 2][n - 2])
+    
 
 }
 
