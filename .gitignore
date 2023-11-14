@@ -9,3 +9,4 @@ git.vcxproj.user
 # Файлы, автоматически созданные VS Code
 /.vscode
 \main_NN.exe
+main_NN
