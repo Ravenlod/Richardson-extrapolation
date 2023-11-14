@@ -212,8 +212,32 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
         printf("\n");
     }
 
-    ALine[n - 1] = matrix[n - 1][n]/matrix[n - 1][n - 1];
-    ALine[n - 2] = matrix[n - 2][n]/(matrix[n - 2][n - 2])
+    double **Matrix_Clone = (double**)malloc(n * sizeof(double*));
+    for(int i = 0; i < n; i ++)
+    {
+        Matrix_Clone[i] = (double*)malloc((n + 1) * sizeof(double));
+    }
+
+    for (int k = n - 1; k > -1; k--) //k-номер строки
+        {
+            for (int i = n; i > -1; i--) //i-номер столбца
+                Matrix_Clone[k][i] = Matrix_Clone[k][i] / matrix[k][k];
+            for (int i = k - 1; i > -1; i--) //i-номер следующей строки после k
+            {
+                double K = Matrix_Clone[i][k] / Matrix_Clone[k][k];
+                for (int j = n; j > -1; j--) //j-номер столбца следующей строки после k
+                    Matrix_Clone[i][j] = Matrix_Clone[i][j] - Matrix_Clone[k][j] * K;
+            }
+        }
+    printf("*********************************\n");
+    for (int i = 0; i < n; i++) 
+    {
+        for (int j = 0; j < n + 1; j++) 
+        {
+            printf("%lf ", Matrix_Clone[i][j]);
+        }
+        printf("\n");
+    }
     
 
 }
