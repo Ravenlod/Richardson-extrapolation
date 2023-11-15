@@ -255,31 +255,22 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
         printf("\n");
     }
 
-    double **Matrix_Clone = (double**)malloc(n * sizeof(double*));
-    for(int i = 0; i < n; i ++)
+    double *roots = (double*)malloc(sizeof(double) * n);
+    double numerator = matrix[n - 1][n];
+    for (int i = n; i > 0; i--)
     {
-        Matrix_Clone[i] = (double*)malloc((n + 1) * sizeof(double));
+        roots[i - 1] = numerator/matrix[i - 1][i - 1];
+        numerator = matrix[i - 2][n];
+        for(int j = n; j > i - 1; j --)
+        {
+            numerator -= matrix[i - 2][j - 1] * roots[j - 1]; 
+        }
     }
 
-    for (int k = n - 1; k > -1; k--) //k-номер строки
-        {
-            for (int i = n; i > -1; i--) //i-номер столбца
-                Matrix_Clone[k][i] = Matrix_Clone[k][i] / matrix[k][k];
-            for (int i = k - 1; i > -1; i--) //i-номер следующей строки после k
-            {
-                double K = Matrix_Clone[i][k] / Matrix_Clone[k][k];
-                for (int j = n; j > -1; j--) //j-номер столбца следующей строки после k
-                    Matrix_Clone[i][j] = Matrix_Clone[i][j] - Matrix_Clone[k][j] * K;
-            }
-        }
     printf("*********************************\n");
     for (int i = 0; i < n; i++) 
     {
-        for (int j = 0; j < n + 1; j++) 
-        {
-            printf("%lf ", Matrix_Clone[i][j]);
-        }
-        printf("\n");
+        printf("%lf ", roots[i]);
     }
     
 
