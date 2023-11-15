@@ -230,7 +230,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
             transportedLeftLine[i][j] = leftLine[j][i];
         }
     }
-    for(int i=0, k_change=2;i<n;i++, k_change*=2){
+    for(int i=0;i<n;i++){
         for(int j=0;j<s;j++){
         printf("%lf ", transportedLeftLine[i][j]);
             
@@ -239,6 +239,8 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
     }
     printf("#################STOP\n");
+
+
     double matrix[5][6] = { {4,	3,	-2,	5,	-7,73}, {-3,2,	4,	-5,	2,-40}, {5,	2,	5,	-3,	6,-77},
                             {-2, 9,	-7,	3,	2,66}, {-6,	2,	4,	-1,	8,-54}};
 
