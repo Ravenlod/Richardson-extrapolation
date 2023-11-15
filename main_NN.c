@@ -3,6 +3,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#define s 4
+#define ELEMENTS_COUNT_PER_SEGMENT 20
 
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
@@ -24,7 +26,7 @@ int main()
 
 
 
-    int n = 5;
+    int n = 2;
     double a, b;
     double e;
     int k = 10;
@@ -191,11 +193,52 @@ int recursiveSearch(int pos, int n, double matrix[][6])
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result) 
 {
     //Allocate memory to store the result of the Runge-Kutta method
-    double* myResult;
+    double *myResult, **leftLine;
     myResult = (double*)malloc((n + 1) * sizeof(double));
+    leftLine = (double**)malloc(s * sizeof(double*));
+    double** transportedLeftLine = (double**)malloc((n+1) * sizeof(double*));
+    /* for(int i=0;i<s;i++){
+        leftLine[i]=(double*)malloc((n + 1) * sizeof(double));
+    } */
     //Call the Runge-Kutta method to solve the ODE
-    myResult = solveRunge(n, a, b, k, y0);
 
+    double h = (b-a)/k;
+    double x0 = a;
+    double x1 = x0+h;
+    //double *leftLine =  solveRunge(n, x0, x1, k_change, y0);
+    myResult = solveRunge(n, a, b, k, y0);
+    for(int i=0, k_change=ELEMENTS_COUNT_PER_SEGMENT; i<s; i++, k_change*=2){
+        leftLine[i] = solveRunge(n, x0, x1, k_change, y0);
+    }
+    printf("#################START\n");
+
+    for(int i=0, k_change=2;i<s;i++, k_change*=2){
+        for(int j=0;j<n+1;j++){
+        printf("%lf ", leftLine[i][j]);
+            
+        }
+        printf("\n");
+
+    }
+    printf("#################MiDDLE\n");
+
+    
+
+    for (int i = 0; i < n+1; i++) {
+        transportedLeftLine[i] = (double*)malloc(s * sizeof(int));
+        for (int j = 0; j < s; j++) {
+            transportedLeftLine[i][j] = leftLine[j][i];
+        }
+    }
+    for(int i=0, k_change=2;i<n+1;i++, k_change*=2){
+        for(int j=0;j<s;j++){
+        printf("%lf ", transportedLeftLine[i][j]);
+            
+        }
+        printf("\n");
+
+    }
+    printf("#################STOP\n");
     double matrix[5][6] = { {4,	3,	-2,	5,	-7,73}, {-3,2,	4,	-5,	2,-40}, {5,	2,	5,	-3,	6,-77},
                             {-2, 9,	-7,	3,	2,66}, {-6,	2,	4,	-1,	8,-54}};
     //массив коэффициентов для решённой системы matrix
