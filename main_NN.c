@@ -197,7 +197,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     // myResult = (double*)malloc(n * sizeof(double));
     myResult = (double*)malloc(n * sizeof(double));
     leftLine = (double**)malloc(s * sizeof(double*));
-    double** transportedLeftLine = (double**)malloc((n+1) * sizeof(double*));
+    double** transportedLeftLine = (double**)malloc(n * sizeof(double*));
     /* for(int i=0;i<s;i++){
         leftLine[i]=(double*)malloc((n + 1) * sizeof(double));
     } */
@@ -225,7 +225,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     
 
     for (int i = 0; i < n; i++) {
-        transportedLeftLine[i] = (double*)malloc(s * sizeof(int));
+        transportedLeftLine[i] = (double*)malloc(s * sizeof(double));
         for (int j = 0; j < s; j++) {
             transportedLeftLine[i][j] = leftLine[j][i];
         }
