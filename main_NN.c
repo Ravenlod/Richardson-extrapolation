@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define s 4
+#define EXTRAPOLATION_MATRIX_SIZE 4
 #define ELEMENTS_COUNT_PER_SEGMENT 20
 
 //#include "odu_NN.h"
@@ -194,11 +194,9 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 {
     //Allocate memory to store the result of the Runge-Kutta method
     double *myResult, **leftLine;
-    // myResult = (double*)malloc(n * sizeof(double));
-    myResult = (double*)malloc(n * sizeof(double));
-    leftLine = (double**)malloc(s * sizeof(double*));
+    leftLine = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
     double** transportedLeftLine = (double**)malloc(n * sizeof(double*));
-    /* for(int i=0;i<s;i++){
+    /* for(int i=0;i<EXTRAPOLATION_MATRIX_SIZE;i++){
         leftLine[i]=(double*)malloc((n + 1) * sizeof(double));
     } */
     //Call the Runge-Kutta method to solve the ODE
@@ -207,12 +205,12 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     double x0 = a;
     double x1 = x0+h;
     myResult = solveRunge(n, a, b, k, y0);
-    for(int i=0, k_change=ELEMENTS_COUNT_PER_SEGMENT; i<s; i++, k_change*=2){
+    for(int i=0, k_change=ELEMENTS_COUNT_PER_SEGMENT; i<EXTRAPOLATION_MATRIX_SIZE; i++, k_change*=2){
         leftLine[i] = solveRunge(n, x0, x1, k_change, y0);
     }
     printf("#################START\n");
 
-    for(int i=0, k_change=2;i<s;i++, k_change*=2){
+    for(int i=0, k_change=2;i<EXTRAPOLATION_MATRIX_SIZE;i++, k_change*=2){
         for(int j=0;j<n;j++){
         printf("%lf ", leftLine[i][j]);
             
@@ -225,13 +223,13 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     
 
     for (int i = 0; i < n; i++) {
-        transportedLeftLine[i] = (double*)malloc(s * sizeof(double));
-        for (int j = 0; j < s; j++) {
+        transportedLeftLine[i] = (double*)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
+        for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) {
             transportedLeftLine[i][j] = leftLine[j][i];
         }
     }
     for(int i=0, k_change=2;i<n;i++, k_change*=2){
-        for(int j=0;j<s;j++){
+        for(int j=0;j<EXTRAPOLATION_MATRIX_SIZE;j++){
         printf("%lf ", transportedLeftLine[i][j]);
             
         }
