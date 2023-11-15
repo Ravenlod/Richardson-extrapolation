@@ -194,7 +194,8 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 {
     //Allocate memory to store the result of the Runge-Kutta method
     double *myResult, **leftLine;
-    myResult = (double*)malloc((n + 1) * sizeof(double));
+    // myResult = (double*)malloc(n * sizeof(double));
+    myResult = (double*)malloc(n * sizeof(double));
     leftLine = (double**)malloc(s * sizeof(double*));
     double** transportedLeftLine = (double**)malloc((n+1) * sizeof(double*));
     /* for(int i=0;i<s;i++){
@@ -205,7 +206,6 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     double h = (b-a)/k;
     double x0 = a;
     double x1 = x0+h;
-    //double *leftLine =  solveRunge(n, x0, x1, k_change, y0);
     myResult = solveRunge(n, a, b, k, y0);
     for(int i=0, k_change=ELEMENTS_COUNT_PER_SEGMENT; i<s; i++, k_change*=2){
         leftLine[i] = solveRunge(n, x0, x1, k_change, y0);
@@ -213,7 +213,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     printf("#################START\n");
 
     for(int i=0, k_change=2;i<s;i++, k_change*=2){
-        for(int j=0;j<n+1;j++){
+        for(int j=0;j<n;j++){
         printf("%lf ", leftLine[i][j]);
             
         }
@@ -224,13 +224,13 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
     
 
-    for (int i = 0; i < n+1; i++) {
+    for (int i = 0; i < n; i++) {
         transportedLeftLine[i] = (double*)malloc(s * sizeof(int));
         for (int j = 0; j < s; j++) {
             transportedLeftLine[i][j] = leftLine[j][i];
         }
     }
-    for(int i=0, k_change=2;i<n+1;i++, k_change*=2){
+    for(int i=0, k_change=2;i<n;i++, k_change*=2){
         for(int j=0;j<s;j++){
         printf("%lf ", transportedLeftLine[i][j]);
             
@@ -316,7 +316,8 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
     k3_line = (double*)malloc(n * sizeof(double));
     k4_line = (double*)malloc(n * sizeof(double));
 
-    result_line = (double*)malloc((n + 1) * sizeof(double));
+    // result_line = (double*)malloc((n + 1) * sizeof(double));
+    result_line = (double*)malloc(n * sizeof(double));
     output = (double*)malloc((n + 1) * sizeof(double));
 
     for (int i = 0; i < n; i++) 
@@ -333,7 +334,7 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
         double x_1 = x_temp + Runge.a2 * h;
         double x_2 = x_temp + Runge.a3 * h;
         double x_3 = x_temp + Runge.a4 * h;
-        result_line[0] = x_temp;
+        //result_line[0] = x_temp;
 
         for (int j = 0; j < n; j++) 
         {
@@ -382,7 +383,7 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
             k4_line[j] = f_result[j] * h;
 
             y_temp[j] += Runge.c1 * k1_line[j] + Runge.c2 * k2_line[j] + Runge.c3 * k3_line[j] + Runge.c4 * k4_line[j];
-            result_line[j + 1] = y_temp[j];
+            result_line[j] = y_temp[j];
         }
         //printf("\n");
         x_temp = x_temp + h;
