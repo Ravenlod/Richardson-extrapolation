@@ -10,3 +10,5 @@ git.vcxproj.user
 /.vscode
 \main_NN.exe
 main_NN
+a.exe
+main_NN.o
