@@ -241,9 +241,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     printf("#################STOP\n");
     double matrix[5][6] = { {4,	3,	-2,	5,	-7,73}, {-3,2,	4,	-5,	2,-40}, {5,	2,	5,	-3,	6,-77},
                             {-2, 9,	-7,	3,	2,66}, {-6,	2,	4,	-1,	8,-54}};
-    //массив коэффициентов для решённой системы matrix
-    double* ALine;
-    ALine = (double*)malloc(n * sizeof(double));
+
     recursiveSearch(0,n,matrix);
     printf("*********************************\n");
     for (int i = 0; i < n; i++) 
