@@ -184,15 +184,15 @@ double* GaussElimination(int pos, int n, double **matrix)
     if (pos == n - 1) 
     {
 
-        for(int i = 0; i < n; i++)
-        {
-            for(int j = 0; j < n + 1; j ++)
-            {
-                printf("%lf ", matrix[i][j]);
-            }
-            printf("\n");
+        // for(int i = 0; i < n; i++)
+        // {
+        //     for(int j = 0; j < n + 1; j ++)
+        //     {
+        //         printf("%lf ", matrix[i][j]);
+        //     }
+        //     printf("\n");
 
-        }
+        // }
 
         double *roots = (double*)malloc(sizeof(double) * n);
         double numerator = matrix[n - 1][n];
@@ -275,7 +275,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     {
         leftLine[i] = solveRunge(n, x0, x1, k_change, y0);
     }
-    printf("#################START\n");
+    //printf("#################START\n");
 
     for(int i = 0, k_change = 2; i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
     {
@@ -323,7 +323,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
             //printf("%lf ", matrix[i][j]);
         }
 
-        printf("\n");
+        //printf("\n");
         hTemp /= 2;
     }
 
@@ -350,40 +350,43 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
                 supercopyMatrix[i][j] = matrix[i][j];
             }
         }
-        printf("\nMATRIX START\n");
-        for(int m = 0; m < EXTRAPOLATION_MATRIX_SIZE; m ++)
-        {
-            for(int n = 0; n < EXTRAPOLATION_MATRIX_SIZE + 1; n ++)
-            {
-                printf("%lf ", supercopyMatrix[m][n]);
-            }
-            printf("\n");
-        }
-        printf("\nMATRIX END\n");
+        // printf("\nMATRIX START\n");
+        // for(int m = 0; m < EXTRAPOLATION_MATRIX_SIZE; m ++)
+        // {
+        //     for(int n = 0; n < EXTRAPOLATION_MATRIX_SIZE + 1; n ++)
+        //     {
+        //         printf("%lf ", supercopyMatrix[m][n]);
+        //     }
+        //     printf("\n");
+        // }
+        // printf("\nMATRIX END\n");
 
 
 
         double *rootLine = GaussElimination(0,EXTRAPOLATION_MATRIX_SIZE,supercopyMatrix);
-        printf("|%lf|\n", matrix[0][0] * rootLine[0] + matrix[0][1] * rootLine[1] +
-        matrix[0][2] * rootLine[2] + matrix[0][3] * rootLine[3] + matrix[0][4] * rootLine[4]);
-        printf("\n1)*********************************\n");
-        
-        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
-        {
-            printf("%lf ", rootLine[j]);
+        double feedbackCheck = 0;
+        for(int j=0;j<EXTRAPOLATION_MATRIX_SIZE;j++){
+            feedbackCheck += matrix[0][j] * rootLine[j];
         }
+            printf("feedback check: |%lf|\n" , feedbackCheck);
+        //printf("\n1)*********************************\n");
+        
+        // for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        // {
+        //     printf("%lf ", rootLine[j]);
+        // }
 
-        printf("\n2)*********************************\n RESULT: ");
+        // printf("\n2)*********************************\n  ");
         extrapolationResult[i] = 0;
         for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
             extrapolationResult[i] += rootLine[j];
             
         }
-        printf("%lf ", extrapolationResult[i]);
+        printf("RESULT: %lf\n", extrapolationResult[i]);
         
-        printf("\n3)*********************************\n");
-        printf("%lf %lf", x0, x1);
+        // printf("\n3)*********************************\n");
+        // printf("%lf %lf", x0, x1);
         
         for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
