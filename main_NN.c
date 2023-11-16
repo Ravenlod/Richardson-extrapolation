@@ -10,7 +10,7 @@
 double funk(int i, double x, double* y);
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
 double* solveRunge(int n, double a, double b,  int k, double* y0);
-int recursiveSearch(int pos, int n, double matrix[][6]);
+double* recursiveSearch(int pos, int n, double **matrix);
 void systemOfLinearFunctions(int n, double* leftLine, int* hLine);
 
 
@@ -113,7 +113,7 @@ void systemOfLinearFunctions(int n, double* leftLine, int* hLine)
 }
 
 //Рекурсивный проход по матрице. Неявно возвращает матрицу в треугольном виде.
-int recursiveSearch(int pos, int n, double matrix[][6]) 
+double* recursiveSearch(int pos, int n, double **matrix)
 {
     double sin, cos;
     double** copyMatrix;
@@ -166,20 +166,39 @@ int recursiveSearch(int pos, int n, double matrix[][6])
         }
 
     }
+    for (int i = 0; i < n; i++) 
+    {
+        free(copyMatrix[i]);
+    }
     free(copyMatrix);
     pos += 1;
 
     //выход из функции
     if (pos == n - 1) 
     {
-        return 1;
+        double *roots = (double*)malloc(sizeof(double) * n);
+        double numerator = matrix[n - 1][n];
+        for (int i = n; i > 0; i--)
+        {
+            roots[i - 1] = numerator/matrix[i - 1][i - 1];
+            if(i == 1)
+            {
+                break;
+            }
+            numerator = matrix[i - 2][n];
+            for(int j = n; j > i - 1; j --)
+            {
+                numerator -= matrix[i - 2][j - 1] * roots[j - 1]; 
+            }
+        }
+        return roots;
     }
 
     //вход в рекурсию со сдвигом pos + 1
     else
     {
-        recursiveSearch(pos, n, matrix);
-        return 1;
+        double* result = recursiveSearch(pos, n, matrix);
+        return result;
     }
 }
 
@@ -236,53 +255,46 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
 
     int kNext = ELEMENTS_COUNT_PER_SEGMENT;
-    double **squareMatrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
+    double **matrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
 
     for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++)
     {
-        squareMatrix[i] = (double *)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
+        matrix[i] = (double *)malloc((EXTRAPOLATION_MATRIX_SIZE + 1) * sizeof(double));
         for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
-            squareMatrix[i][j] = exp((j + 1) * (b - a) / kNext);
-            printf("%lf ", squareMatrix[i][j]);
+            matrix[i][j] = exp((j + 1) * (b - a) / kNext);
+            printf("%lf ", matrix[i][j]);
         }
+
         printf("\n");
         kNext *= 2;
     }
 
-    
-    double matrix[5][6] = { {4,	3,	-2,	5,	-7,73}, {-3,2,	4,	-5,	2,-40}, {5,	2,	5,	-3,	6,-77},
-                            {-2, 9,	-7,	3,	2,66}, {-6,	2,	4,	-1,	8,-54}};
 
-    recursiveSearch(0,n,matrix);
-    printf("*********************************\n");
-    for (int i = 0; i < n; i++) 
+    for(int i = 0; i < n; i ++)
     {
-        for (int j = 0; j < n + 1; j++) 
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
-            printf("%lf ", matrix[i][j]);
+            matrix[i][EXTRAPOLATION_MATRIX_SIZE] = leftLine[j][i];
         }
-        printf("\n");
-    }
+        double *rootLine = recursiveSearch(0,EXTRAPOLATION_MATRIX_SIZE,matrix);
 
-    double *roots = (double*)malloc(sizeof(double) * n);
-    double numerator = matrix[n - 1][n];
-    for (int i = n; i > 0; i--)
-    {
-        roots[i - 1] = numerator/matrix[i - 1][i - 1];
-        numerator = matrix[i - 2][n];
-        for(int j = n; j > i - 1; j --)
+        printf("\n*********************************\n");
+        
+        for(int j = 0; j < 5; j ++)
         {
-            numerator -= matrix[i - 2][j - 1] * roots[j - 1]; 
+            printf("%lf ", rootLine[j]);
         }
-    }
 
-    printf("*********************************\n");
-    for (int i = 0; i < n; i++) 
-    {
-        printf("%lf ", roots[i]);
+        printf("\n*********************************\n");
+
     }
     
+
+
+
+
+
 
 }
 
