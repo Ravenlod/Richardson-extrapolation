@@ -281,7 +281,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
         printf("\n*********************************\n");
         
-        for(int j = 0; j < 5; j ++)
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
             printf("%lf ", rootLine[j]);
         }
