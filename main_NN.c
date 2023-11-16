@@ -3,14 +3,14 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define EXTRAPOLATION_MATRIX_SIZE 4
-#define ELEMENTS_COUNT_PER_SEGMENT 20
+#define EXTRAPOLATION_MATRIX_SIZE 5
+#define ELEMENTS_COUNT_PER_SEGMENT 25
 
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
 double* solveRunge(int n, double a, double b,  int k, double* y0);
-double* recursiveSearch(int pos, int n, double **matrix);
+double* GaussElimination(int pos, int n, double **matrix);
 void systemOfLinearFunctions(int n, double* leftLine, int* hLine);
 
 
@@ -57,7 +57,7 @@ int main()
      }
      fscanf(input, "%lf", &y0[0]);
     */
-    double y0Line[] = { 1,-2 };
+    double y0Line[] = { 1, -2};
     solveODE(n, 0, 20, 0.01, k, y0Line, result);
 
     /*double** matrix;
@@ -80,7 +80,14 @@ double funk(int i, double x, double* y)
 
     switch (i) 
     {
-        case 0:
+        // case 0:
+        //     result = x * y[0] + x * y[1];  // Пример: y'[0] = x * y[0]
+        //     break;
+        // case 1:
+        //     result = x * y[1] + x * y[0];  // Пример: y'[1] = sin(x) * y[1]
+        //     break;
+
+         case 0:
             result = sin(x) * y[0] + cos(x) * y[1];  // Пример: y'[0] = x * y[0]
             break;
         case 1:
@@ -113,7 +120,7 @@ void systemOfLinearFunctions(int n, double* leftLine, int* hLine)
 }
 
 //Рекурсивный проход по матрице. Неявно возвращает матрицу в треугольном виде.
-double* recursiveSearch(int pos, int n, double **matrix)
+double* GaussElimination(int pos, int n, double **matrix)
 {
     double sin, cos;
     double** copyMatrix;
@@ -176,6 +183,17 @@ double* recursiveSearch(int pos, int n, double **matrix)
     //выход из функции
     if (pos == n - 1) 
     {
+
+        for(int i = 0; i < n; i++)
+        {
+            for(int j = 0; j < n + 1; j ++)
+            {
+                printf("%lf ", matrix[i][j]);
+            }
+            printf("\n");
+
+        }
+
         double *roots = (double*)malloc(sizeof(double) * n);
         double numerator = matrix[n - 1][n];
         for (int i = n; i > 0; i--)
@@ -197,23 +215,61 @@ double* recursiveSearch(int pos, int n, double **matrix)
     //вход в рекурсию со сдвигом pos + 1
     else
     {
-        double* result = recursiveSearch(pos, n, matrix);
+        double* result = GaussElimination(pos, n, matrix);
         return result;
     }
 }
 
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result) 
 {
+    // 3	-4	6	2	9		35
+    // 5	2	-7	2	-5		12
+    // -4	2	-3	9	2		48
+    // 8	-3	-2	6	4		67
+    // 9	-4	3	7	-2		116
+
+
+
+    // double supermatrix[5][6] = {
+    //     {3, -4, 6, 2, 9, 35},
+    //     {5, 2, -7, 2, -5, 12},
+    //     {-4, 2, -3, 9, 2, 48},
+    //     {8, -3, -2, 6, 4, 67},
+    //     {9, -4, 3, 7, -2, 116}
+    // };
+
+    // double**supercopyMatrix = (double**)malloc(5 * sizeof(double*));
+    // for (int i = 0; i < 5; i++) 
+    // {
+    //     supercopyMatrix[i] = (double*)malloc(6 * sizeof(double));
+    // }
+    // for(int i = 0; i < 5; i ++)
+    // {
+    //     for(int j = 0; j < 6; j ++)
+    //     {
+    //         supercopyMatrix[i][j] = supermatrix[i][j];
+    //     }
+    // }
+    // double *res = GaussElimination(0,5,supercopyMatrix);
+    // for(int i = 0; i < 5; i ++)
+    // {
+    //     printf("%lf ", res[i]);
+    // }
+    // printf("\n");
+    // //-3 9 3 -5 2
+
+
+
     //Allocate memory to store the result of the Runge-Kutta method
-    double *myResult, **leftLine;
+    double **leftLine;
     leftLine = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
     double** transportedLeftLine = (double**)malloc(n * sizeof(double*));
     //Call the Runge-Kutta method to solve the ODE
 
-    double h = (b-a)/k;
+    double h = (b - a) / k;
     double x0 = a;
-    double x1 = x0+h;
-    myResult = solveRunge(n, a, b, k, y0);
+    double x1 = x0 + h;
+
     for(int i = 0, k_change = ELEMENTS_COUNT_PER_SEGMENT;
         i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
     {
@@ -231,71 +287,110 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
         printf("\n");
 
     }
-    printf("#################MiDDLE\n");
+    // printf("#################MiDDLE\n");
 
-    for (int i = 0; i < n; i++) 
-    {
-        transportedLeftLine[i] = (double*)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
-        for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) 
-        {
-            transportedLeftLine[i][j] = leftLine[j][i];
-        }
-    }
+    // for (int i = 0; i < n; i++) 
+    // {
+    //     transportedLeftLine[i] = (double*)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
+    //     for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) 
+    //     {
+    //         transportedLeftLine[i][j] = leftLine[j][i];
+    //     }
+    // }
 
-    for(int i = 0, k_change = 2; i < n; i++, k_change*=2)
-    {
-        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++)
-        {
-        printf("%lf ", transportedLeftLine[i][j]);    
-        }
-        printf("\n");
+    // for(int i = 0, k_change = 2; i < n; i++, k_change*=2)
+    // {
+    //     for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++)
+    //     {
+    //     printf("%lf ", transportedLeftLine[i][j]);    
+    //     }
+    //     printf("\n");
 
-    }
-    printf("#################STOP\n");
+    // }
+    // printf("#################STOP\n");
 
-
-    int kNext = ELEMENTS_COUNT_PER_SEGMENT;
     double **matrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
-
+    double hTemp = h;
     for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++)
     {
         matrix[i] = (double *)malloc((EXTRAPOLATION_MATRIX_SIZE + 1) * sizeof(double));
+
         for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
-            matrix[i][j] = exp((j + 1) * (b - a) / kNext);
-            printf("%lf ", matrix[i][j]);
+            matrix[i][j] = exp( pow(2, j) * hTemp);
+            // matrix[i][j] = 
+
+            //printf("%lf ", matrix[i][j]);
         }
 
         printf("\n");
-        kNext *= 2;
+        hTemp /= 2;
     }
 
+    double *extrapolationResult = (double*)malloc(sizeof(double) * n);
 
     for(int i = 0; i < n; i ++)
     {
         for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
-            matrix[i][EXTRAPOLATION_MATRIX_SIZE] = leftLine[j][i];
+            matrix[j][EXTRAPOLATION_MATRIX_SIZE] = leftLine[j][i];
         }
-        double *rootLine = recursiveSearch(0,EXTRAPOLATION_MATRIX_SIZE,matrix);
+        
 
-        printf("\n*********************************\n");
+        
+        double**supercopyMatrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
+        for (int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++) 
+        {
+            supercopyMatrix[i] = (double*)malloc((EXTRAPOLATION_MATRIX_SIZE+1) * sizeof(double));
+        }
+        for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i ++)
+        {
+            for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE+1; j ++)
+            {
+                supercopyMatrix[i][j] = matrix[i][j];
+            }
+        }
+        printf("\nMATRIX START\n");
+        for(int m = 0; m < EXTRAPOLATION_MATRIX_SIZE; m ++)
+        {
+            for(int n = 0; n < EXTRAPOLATION_MATRIX_SIZE + 1; n ++)
+            {
+                printf("%lf ", supercopyMatrix[m][n]);
+            }
+            printf("\n");
+        }
+        printf("\nMATRIX END\n");
+
+
+
+        double *rootLine = GaussElimination(0,EXTRAPOLATION_MATRIX_SIZE,supercopyMatrix);
+        printf("|%lf|\n", matrix[0][0] * rootLine[0] + matrix[0][1] * rootLine[1] +
+        matrix[0][2] * rootLine[2] + matrix[0][3] * rootLine[3] + matrix[0][4] * rootLine[4]);
+        printf("\n1)*********************************\n");
         
         for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
             printf("%lf ", rootLine[j]);
         }
 
-        printf("\n*********************************\n");
-
+        printf("\n2)*********************************\n RESULT: ");
+        extrapolationResult[i] = 0;
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        {
+            extrapolationResult[i] += rootLine[j];
+            
+        }
+        printf("%lf ", extrapolationResult[i]);
+        
+        printf("\n3)*********************************\n");
+        printf("%lf %lf", x0, x1);
+        
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        {
+            free(supercopyMatrix[j]);
+        }
+        free(supercopyMatrix);
     }
-    
-
-
-
-
-
-
 }
 
 
