@@ -210,7 +210,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     }
     printf("#################START\n");
 
-    for(int i=0, k_change=2;i<EXTRAPOLATION_MATRIX_SIZE;i++, k_change*=2){
+    for(int i=0;i<EXTRAPOLATION_MATRIX_SIZE;i++){
         for(int j=0;j<n;j++){
         printf("%lf ", leftLine[i][j]);
             
@@ -228,7 +228,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
             transportedLeftLine[i][j] = leftLine[j][i];
         }
     }
-    for(int i=0, k_change=2;i<n;i++, k_change*=2){
+    for(int i=0;i<n;i++){
         for(int j=0;j<EXTRAPOLATION_MATRIX_SIZE;j++){
         printf("%lf ", transportedLeftLine[i][j]);
             
