@@ -10,7 +10,7 @@
 double funk(int i, double x, double* y);
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
 double* solveRunge(int n, double a, double b,  int k, double* y0);
-int recursiveSearch(int pos, int n, double matrix[][6]);
+double* recursiveSearch(int pos, int n, double **matrix);
 void systemOfLinearFunctions(int n, double* leftLine, int* hLine);
 
 
@@ -23,9 +23,6 @@ struct Runge
 
 int main() 
 {
-
-
-
     int n = 2;
     double a, b;
     double e;
@@ -116,7 +113,7 @@ void systemOfLinearFunctions(int n, double* leftLine, int* hLine)
 }
 
 //Рекурсивный проход по матрице. Неявно возвращает матрицу в треугольном виде.
-int recursiveSearch(int pos, int n, double matrix[][6]) 
+double* recursiveSearch(int pos, int n, double **matrix)
 {
     double sin, cos;
     double** copyMatrix;
@@ -141,11 +138,10 @@ int recursiveSearch(int pos, int n, double matrix[][6])
             for (int j = 0; j < n + 1; j ++) 
             {
                 copyMatrix[m][j] = matrix[m][j];
-                //printf("%lf ", copyMatrix[m][j]);
             }
-            //printf("\n");
+
         }
-        //printf("\n");
+
         //расчет матрицы поворотов
         for (int j = 0; j < n + 1; j++) 
         {
@@ -159,11 +155,8 @@ int recursiveSearch(int pos, int n, double matrix[][6])
             for (int j = 0; j < n + 1; j++) 
             {
                 matrix[m][j] = copyMatrix[m][j];
-                //printf("%lf ", matrix[m][j]);
             }
-            //printf("\n ");
         }
-        //printf("\n");
 
         //Костыль для ограничения расчётов косинуса и синуса
         if (i + 2 != n - pos) 
@@ -173,20 +166,39 @@ int recursiveSearch(int pos, int n, double matrix[][6])
         }
 
     }
+    for (int i = 0; i < n; i++) 
+    {
+        free(copyMatrix[i]);
+    }
     free(copyMatrix);
     pos += 1;
 
     //выход из функции
     if (pos == n - 1) 
     {
-        return 1;
+        double *roots = (double*)malloc(sizeof(double) * n);
+        double numerator = matrix[n - 1][n];
+        for (int i = n; i > 0; i--)
+        {
+            roots[i - 1] = numerator/matrix[i - 1][i - 1];
+            if(i == 1)
+            {
+                break;
+            }
+            numerator = matrix[i - 2][n];
+            for(int j = n; j > i - 1; j --)
+            {
+                numerator -= matrix[i - 2][j - 1] * roots[j - 1]; 
+            }
+        }
+        return roots;
     }
 
     //вход в рекурсию со сдвигом pos + 1
     else
     {
-        recursiveSearch(pos, n, matrix);
-        return 1;
+        double* result = recursiveSearch(pos, n, matrix);
+        return result;
     }
 }
 
@@ -196,22 +208,23 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     double *myResult, **leftLine;
     leftLine = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
     double** transportedLeftLine = (double**)malloc(n * sizeof(double*));
-    /* for(int i=0;i<EXTRAPOLATION_MATRIX_SIZE;i++){
-        leftLine[i]=(double*)malloc((n + 1) * sizeof(double));
-    } */
     //Call the Runge-Kutta method to solve the ODE
 
     double h = (b-a)/k;
     double x0 = a;
     double x1 = x0+h;
     myResult = solveRunge(n, a, b, k, y0);
-    for(int i=0, k_change=ELEMENTS_COUNT_PER_SEGMENT; i<EXTRAPOLATION_MATRIX_SIZE; i++, k_change*=2){
+    for(int i = 0, k_change = ELEMENTS_COUNT_PER_SEGMENT;
+        i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
+    {
         leftLine[i] = solveRunge(n, x0, x1, k_change, y0);
     }
     printf("#################START\n");
 
-    for(int i=0;i<EXTRAPOLATION_MATRIX_SIZE;i++){
-        for(int j=0;j<n;j++){
+    for(int i = 0, k_change = 2; i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
+    {
+        for(int j = 0; j < n; j++)
+        {
         printf("%lf ", leftLine[i][j]);
             
         }
@@ -220,18 +233,20 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     }
     printf("#################MiDDLE\n");
 
-    
-
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) 
+    {
         transportedLeftLine[i] = (double*)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
-        for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) {
+        for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) 
+        {
             transportedLeftLine[i][j] = leftLine[j][i];
         }
     }
-    for(int i=0;i<n;i++){
-        for(int j=0;j<EXTRAPOLATION_MATRIX_SIZE;j++){
-        printf("%lf ", transportedLeftLine[i][j]);
-            
+
+    for(int i = 0, k_change = 2; i < n; i++, k_change*=2)
+    {
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++)
+        {
+        printf("%lf ", transportedLeftLine[i][j]);    
         }
         printf("\n");
 
@@ -239,38 +254,47 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     printf("#################STOP\n");
 
 
-    double matrix[5][6] = { {4,	3,	-2,	5,	-7,73}, {-3,2,	4,	-5,	2,-40}, {5,	2,	5,	-3,	6,-77},
-                            {-2, 9,	-7,	3,	2,66}, {-6,	2,	4,	-1,	8,-54}};
+    int kNext = ELEMENTS_COUNT_PER_SEGMENT;
+    double **matrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
 
-    recursiveSearch(0,n,matrix);
-    printf("*********************************\n");
-    for (int i = 0; i < n; i++) 
+    for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++)
     {
-        for (int j = 0; j < n + 1; j++) 
+        matrix[i] = (double *)malloc((EXTRAPOLATION_MATRIX_SIZE + 1) * sizeof(double));
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
+            matrix[i][j] = exp((j + 1) * (b - a) / kNext);
             printf("%lf ", matrix[i][j]);
         }
+
         printf("\n");
+        kNext *= 2;
     }
 
-    double *roots = (double*)malloc(sizeof(double) * n);
-    double numerator = matrix[n - 1][n];
-    for (int i = n; i > 0; i--)
+
+    for(int i = 0; i < n; i ++)
     {
-        roots[i - 1] = numerator/matrix[i - 1][i - 1];
-        numerator = matrix[i - 2][n];
-        for(int j = n; j > i - 1; j --)
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
         {
-            numerator -= matrix[i - 2][j - 1] * roots[j - 1]; 
+            matrix[i][EXTRAPOLATION_MATRIX_SIZE] = leftLine[j][i];
         }
-    }
+        double *rootLine = recursiveSearch(0,EXTRAPOLATION_MATRIX_SIZE,matrix);
 
-    printf("*********************************\n");
-    for (int i = 0; i < n; i++) 
-    {
-        printf("%lf ", roots[i]);
+        printf("\n*********************************\n");
+        
+        for(int j = 0; j < 5; j ++)
+        {
+            printf("%lf ", rootLine[j]);
+        }
+
+        printf("\n*********************************\n");
+
     }
     
+
+
+
+
+
 
 }
 
