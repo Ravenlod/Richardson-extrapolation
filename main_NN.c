@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #define EXTRAPOLATION_MATRIX_SIZE 5
 #define ELEMENTS_COUNT_PER_SEGMENT 25
+#define K_MULTIPLIER 2
 
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
@@ -100,23 +101,140 @@ double funk(int i, double x, double* y)
     return result;
 }
 
-void systemOfLinearFunctions(int n, double* leftLine, int* hLine) 
+double* RichardsonExtrapolation(int n, int a, int b, int k, int factor) 
 {
-    int ratio=2;
-    double** matrix;
-    matrix = (double**)malloc(n * sizeof(double*));
-    for (int i = 0; i < n; i++) 
+    double **leftLine;
+    leftLine = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
+    double** transportedLeftLine = (double**)malloc(n * sizeof(double*));
+    //Call the Runge-Kutta method to solve the ODE
+
+   
+
+    for(int i = 0, k_change = ELEMENTS_COUNT_PER_SEGMENT;
+        i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
     {
-        matrix[i] = (double*)malloc(n * sizeof(double));
+        leftLine[i] = solveRunge(n, x0, x1, k_change, y0);
     }
-    for (int i = 0; i < n; i++) 
+    //printf("#################START\n");
+
+    for(int i = 0, k_change = 2; i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
     {
-        for (int j = 0; j < n; j++) 
+        for(int j = 0; j < n; j++)
         {
-            matrix[i][j] = exp(ratio * (j + 1) * hLine[i]);
+        printf("%lf ", leftLine[i][j]);
+            
         }
+        printf("\n");
+
     }
-    
+    // printf("#################MiDDLE\n");
+
+    // for (int i = 0; i < n; i++) 
+    // {
+    //     transportedLeftLine[i] = (double*)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
+    //     for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) 
+    //     {
+    //         transportedLeftLine[i][j] = leftLine[j][i];
+    //     }
+    // }
+
+    // for(int i = 0, k_change = 2; i < n; i++, k_change*=2)
+    // {
+    //     for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++)
+    //     {
+    //     printf("%lf ", transportedLeftLine[i][j]);    
+    //     }
+    //     printf("\n");
+
+    // }
+    // printf("#################STOP\n");
+
+    double **matrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
+    double hTemp = h;
+    for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++)
+    {
+        matrix[i] = (double *)malloc((EXTRAPOLATION_MATRIX_SIZE + 1) * sizeof(double));
+
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        {
+            matrix[i][j] = exp( pow(2, j) * hTemp);
+            // matrix[i][j] = 
+
+            //printf("%lf ", matrix[i][j]);
+        }
+
+        //printf("\n");
+        hTemp /= 2;
+    }
+
+    double *extrapolationResult = (double*)malloc(sizeof(double) * n);
+
+    for(int i = 0; i < n; i ++)
+    {
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        {
+            matrix[j][EXTRAPOLATION_MATRIX_SIZE] = leftLine[j][i];
+        }
+        
+
+        
+        double**supercopyMatrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
+        for (int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++) 
+        {
+            supercopyMatrix[i] = (double*)malloc((EXTRAPOLATION_MATRIX_SIZE+1) * sizeof(double));
+        }
+        for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i ++)
+        {
+            for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE+1; j ++)
+            {
+                supercopyMatrix[i][j] = matrix[i][j];
+            }
+        }
+        // printf("\nMATRIX START\n");
+        // for(int m = 0; m < EXTRAPOLATION_MATRIX_SIZE; m ++)
+        // {
+        //     for(int n = 0; n < EXTRAPOLATION_MATRIX_SIZE + 1; n ++)
+        //     {
+        //         printf("%lf ", supercopyMatrix[m][n]);
+        //     }
+        //     printf("\n");
+        // }
+        // printf("\nMATRIX END\n");
+
+
+
+        double *rootLine = GaussElimination(0,EXTRAPOLATION_MATRIX_SIZE,supercopyMatrix);
+        double feedbackCheck = 0;
+        for(int j=0;j<EXTRAPOLATION_MATRIX_SIZE;j++){
+            feedbackCheck += matrix[0][j] * rootLine[j];
+        }
+            printf("feedback check: |%lf|\n" , feedbackCheck);
+        //printf("\n1)*********************************\n");
+        
+        // for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        // {
+        //     printf("%lf ", rootLine[j]);
+        // }
+
+        // printf("\n2)*********************************\n  ");
+        extrapolationResult[i] = 0;
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        {
+            extrapolationResult[i] += rootLine[j];
+            
+        }
+        printf("RESULT: %lf\n", extrapolationResult[i]);
+        
+        // printf("\n3)*********************************\n");
+        // printf("%lf %lf", x0, x1);
+        
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        {
+            free(supercopyMatrix[j]);
+        }
+        free(supercopyMatrix);
+    }
+    return extrapolationResult;
 }
 
 //Рекурсивный проход по матрице. Неявно возвращает матрицу в треугольном виде.
@@ -261,139 +379,147 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
 
     //Allocate memory to store the result of the Runge-Kutta method
-    double **leftLine;
-    leftLine = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
-    double** transportedLeftLine = (double**)malloc(n * sizeof(double*));
-    //Call the Runge-Kutta method to solve the ODE
+    // double **leftLine;
+    // leftLine = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
+    // double** transportedLeftLine = (double**)malloc(n * sizeof(double*));
+    // //Call the Runge-Kutta method to solve the ODE
 
-    double h = (b - a) / k;
-    double x0 = a;
-    double x1 = x0 + h;
+    // double h = (b - a) / k;
+    // double x0 = a;
+    // double x1 = x0 + h;
 
-    for(int i = 0, k_change = ELEMENTS_COUNT_PER_SEGMENT;
-        i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
-    {
-        leftLine[i] = solveRunge(n, x0, x1, k_change, y0);
-    }
-    //printf("#################START\n");
-
-    for(int i = 0, k_change = 2; i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
-    {
-        for(int j = 0; j < n; j++)
-        {
-        printf("%lf ", leftLine[i][j]);
-            
-        }
-        printf("\n");
-
-    }
-    // printf("#################MiDDLE\n");
-
-    // for (int i = 0; i < n; i++) 
+    // for(int i = 0, k_change = ELEMENTS_COUNT_PER_SEGMENT;
+    //     i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
     // {
-    //     transportedLeftLine[i] = (double*)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
-    //     for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) 
-    //     {
-    //         transportedLeftLine[i][j] = leftLine[j][i];
-    //     }
+    //     leftLine[i] = solveRunge(n, x0, x1, k_change, y0);
     // }
+    // //printf("#################START\n");
 
-    // for(int i = 0, k_change = 2; i < n; i++, k_change*=2)
+    // for(int i = 0, k_change = 2; i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
     // {
-    //     for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++)
+    //     for(int j = 0; j < n; j++)
     //     {
-    //     printf("%lf ", transportedLeftLine[i][j]);    
+    //     printf("%lf ", leftLine[i][j]);
+            
     //     }
     //     printf("\n");
 
     // }
-    // printf("#################STOP\n");
+    // // printf("#################MiDDLE\n");
 
-    double **matrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
-    double hTemp = h;
-    for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++)
-    {
-        matrix[i] = (double *)malloc((EXTRAPOLATION_MATRIX_SIZE + 1) * sizeof(double));
+    // // for (int i = 0; i < n; i++) 
+    // // {
+    // //     transportedLeftLine[i] = (double*)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
+    // //     for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) 
+    // //     {
+    // //         transportedLeftLine[i][j] = leftLine[j][i];
+    // //     }
+    // // }
 
-        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
-        {
-            matrix[i][j] = exp( pow(2, j) * hTemp);
-            // matrix[i][j] = 
+    // // for(int i = 0, k_change = 2; i < n; i++, k_change*=2)
+    // // {
+    // //     for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++)
+    // //     {
+    // //     printf("%lf ", transportedLeftLine[i][j]);    
+    // //     }
+    // //     printf("\n");
 
-            //printf("%lf ", matrix[i][j]);
-        }
+    // // }
+    // // printf("#################STOP\n");
 
-        //printf("\n");
-        hTemp /= 2;
-    }
+    // double **matrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
+    // double hTemp = h;
+    // for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++)
+    // {
+    //     matrix[i] = (double *)malloc((EXTRAPOLATION_MATRIX_SIZE + 1) * sizeof(double));
 
-    double *extrapolationResult = (double*)malloc(sizeof(double) * n);
+    //     for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+    //     {
+    //         matrix[i][j] = exp( pow(2, j) * hTemp);
+    //         // matrix[i][j] = 
 
-    for(int i = 0; i < n; i ++)
-    {
-        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
-        {
-            matrix[j][EXTRAPOLATION_MATRIX_SIZE] = leftLine[j][i];
-        }
+    //         //printf("%lf ", matrix[i][j]);
+    //     }
+
+    //     //printf("\n");
+    //     hTemp /= 2;
+    // }
+
+    // double *extrapolationResult = (double*)malloc(sizeof(double) * n);
+
+    // for(int i = 0; i < n; i ++)
+    // {
+    //     for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+    //     {
+    //         matrix[j][EXTRAPOLATION_MATRIX_SIZE] = leftLine[j][i];
+    //     }
         
 
         
-        double**supercopyMatrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
-        for (int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++) 
-        {
-            supercopyMatrix[i] = (double*)malloc((EXTRAPOLATION_MATRIX_SIZE+1) * sizeof(double));
-        }
-        for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i ++)
-        {
-            for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE+1; j ++)
-            {
-                supercopyMatrix[i][j] = matrix[i][j];
-            }
-        }
-        // printf("\nMATRIX START\n");
-        // for(int m = 0; m < EXTRAPOLATION_MATRIX_SIZE; m ++)
-        // {
-        //     for(int n = 0; n < EXTRAPOLATION_MATRIX_SIZE + 1; n ++)
-        //     {
-        //         printf("%lf ", supercopyMatrix[m][n]);
-        //     }
-        //     printf("\n");
-        // }
-        // printf("\nMATRIX END\n");
+    //     double**supercopyMatrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
+    //     for (int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++) 
+    //     {
+    //         supercopyMatrix[i] = (double*)malloc((EXTRAPOLATION_MATRIX_SIZE+1) * sizeof(double));
+    //     }
+    //     for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i ++)
+    //     {
+    //         for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE+1; j ++)
+    //         {
+    //             supercopyMatrix[i][j] = matrix[i][j];
+    //         }
+    //     }
+    //     // printf("\nMATRIX START\n");
+    //     // for(int m = 0; m < EXTRAPOLATION_MATRIX_SIZE; m ++)
+    //     // {
+    //     //     for(int n = 0; n < EXTRAPOLATION_MATRIX_SIZE + 1; n ++)
+    //     //     {
+    //     //         printf("%lf ", supercopyMatrix[m][n]);
+    //     //     }
+    //     //     printf("\n");
+    //     // }
+    //     // printf("\nMATRIX END\n");
 
 
 
-        double *rootLine = GaussElimination(0,EXTRAPOLATION_MATRIX_SIZE,supercopyMatrix);
-        double feedbackCheck = 0;
-        for(int j=0;j<EXTRAPOLATION_MATRIX_SIZE;j++){
-            feedbackCheck += matrix[0][j] * rootLine[j];
-        }
-            printf("feedback check: |%lf|\n" , feedbackCheck);
-        //printf("\n1)*********************************\n");
+    //     double *rootLine = GaussElimination(0,EXTRAPOLATION_MATRIX_SIZE,supercopyMatrix);
+    //     double feedbackCheck = 0;
+    //     for(int j=0;j<EXTRAPOLATION_MATRIX_SIZE;j++){
+    //         feedbackCheck += matrix[0][j] * rootLine[j];
+    //     }
+    //         printf("feedback check: |%lf|\n" , feedbackCheck);
+    //     //printf("\n1)*********************************\n");
         
-        // for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
-        // {
-        //     printf("%lf ", rootLine[j]);
-        // }
+    //     // for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+    //     // {
+    //     //     printf("%lf ", rootLine[j]);
+    //     // }
 
-        // printf("\n2)*********************************\n  ");
-        extrapolationResult[i] = 0;
-        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
-        {
-            extrapolationResult[i] += rootLine[j];
+    //     // printf("\n2)*********************************\n  ");
+    //     extrapolationResult[i] = 0;
+    //     for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+    //     {
+    //         extrapolationResult[i] += rootLine[j];
             
-        }
-        printf("RESULT: %lf\n", extrapolationResult[i]);
+    //     }
+    //     printf("RESULT: %lf\n", extrapolationResult[i]);
         
-        // printf("\n3)*********************************\n");
-        // printf("%lf %lf", x0, x1);
+    //     // printf("\n3)*********************************\n");
+    //     // printf("%lf %lf", x0, x1);
         
-        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
-        {
-            free(supercopyMatrix[j]);
-        }
-        free(supercopyMatrix);
-    }
+    //     for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+    //     {
+    //         free(supercopyMatrix[j]);
+    //     }
+    //     free(supercopyMatrix);
+    // }
+
+    double h = (b - a) / k;
+    double segmentBegin = a;
+    double segmentEnd = segmentBegin + h;
+
+
+    RichardsonExtrapolation(n,segmentBegin, segmentEnd,k, K_MULTIPLIER);
+    RichardsonExtrapolation(n,segmentBegin, segmentEnd,k, K_MULTIPLIER*2);
 }
 
 
