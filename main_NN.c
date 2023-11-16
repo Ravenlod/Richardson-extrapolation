@@ -23,9 +23,6 @@ struct Runge
 
 int main() 
 {
-
-
-
     int n = 2;
     double a, b;
     double e;
@@ -141,11 +138,10 @@ int recursiveSearch(int pos, int n, double matrix[][6])
             for (int j = 0; j < n + 1; j ++) 
             {
                 copyMatrix[m][j] = matrix[m][j];
-                //printf("%lf ", copyMatrix[m][j]);
             }
-            //printf("\n");
+
         }
-        //printf("\n");
+
         //расчет матрицы поворотов
         for (int j = 0; j < n + 1; j++) 
         {
@@ -159,11 +155,8 @@ int recursiveSearch(int pos, int n, double matrix[][6])
             for (int j = 0; j < n + 1; j++) 
             {
                 matrix[m][j] = copyMatrix[m][j];
-                //printf("%lf ", matrix[m][j]);
             }
-            //printf("\n ");
         }
-        //printf("\n");
 
         //Костыль для ограничения расчётов косинуса и синуса
         if (i + 2 != n - pos) 
@@ -196,22 +189,23 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     double *myResult, **leftLine;
     leftLine = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
     double** transportedLeftLine = (double**)malloc(n * sizeof(double*));
-    /* for(int i=0;i<EXTRAPOLATION_MATRIX_SIZE;i++){
-        leftLine[i]=(double*)malloc((n + 1) * sizeof(double));
-    } */
     //Call the Runge-Kutta method to solve the ODE
 
     double h = (b-a)/k;
     double x0 = a;
     double x1 = x0+h;
     myResult = solveRunge(n, a, b, k, y0);
-    for(int i=0, k_change=ELEMENTS_COUNT_PER_SEGMENT; i<EXTRAPOLATION_MATRIX_SIZE; i++, k_change*=2){
+    for(int i = 0, k_change = ELEMENTS_COUNT_PER_SEGMENT;
+        i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
+    {
         leftLine[i] = solveRunge(n, x0, x1, k_change, y0);
     }
     printf("#################START\n");
 
-    for(int i=0, k_change=2;i<EXTRAPOLATION_MATRIX_SIZE;i++, k_change*=2){
-        for(int j=0;j<n;j++){
+    for(int i = 0, k_change = 2; i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
+    {
+        for(int j = 0; j < n; j++)
+        {
         printf("%lf ", leftLine[i][j]);
             
         }
@@ -220,17 +214,19 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     }
     printf("#################MiDDLE\n");
 
-    
-
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) 
+    {
         transportedLeftLine[i] = (double*)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
-        for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) {
+        for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++) 
+        {
             transportedLeftLine[i][j] = leftLine[j][i];
         }
     }
 
-    for(int i=0, k_change=2;i<n;i++, k_change*=2){
-        for(int j=0;j<EXTRAPOLATION_MATRIX_SIZE;j++){
+    for(int i = 0, k_change = 2; i < n; i++, k_change*=2)
+    {
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++)
+        {
         printf("%lf ", transportedLeftLine[i][j]);    
         }
         printf("\n");
@@ -239,6 +235,22 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     printf("#################STOP\n");
 
 
+    int kNext = ELEMENTS_COUNT_PER_SEGMENT;
+    double **squareMatrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
+
+    for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++)
+    {
+        squareMatrix[i] = (double *)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double));
+        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        {
+            squareMatrix[i][j] = exp((j + 1) * (b - a) / kNext);
+            printf("%lf ", squareMatrix[i][j]);
+        }
+        printf("\n");
+        kNext *= 2;
+    }
+
+    
     double matrix[5][6] = { {4,	3,	-2,	5,	-7,73}, {-3,2,	4,	-5,	2,-40}, {5,	2,	5,	-3,	6,-77},
                             {-2, 9,	-7,	3,	2,66}, {-6,	2,	4,	-1,	8,-54}};
 
