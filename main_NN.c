@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #define EXTRAPOLATION_MATRIX_SIZE 5
 #define ELEMENTS_COUNT_PER_SEGMENT 25
-#define K_MULTIPLIER 2
 
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
@@ -149,16 +148,6 @@ double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, i
             }
         }
 
-        // printf("*********************************\n");
-        // for (int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++) 
-        // {
-        //     for (int j = 0; j < EXTRAPOLATION_MATRIX_SIZE + 1; j++) 
-        //     {
-        //         printf("%lf ", tempMatrix[i][j]);
-        //     }
-        //     printf("\n");
-        // }
-
         double *rootLine = GaussElimination(0,EXTRAPOLATION_MATRIX_SIZE,tempMatrix);
         double feedbackCheck = 0;
         for(int j = 0;j < EXTRAPOLATION_MATRIX_SIZE; j++){
@@ -259,16 +248,6 @@ double* GaussElimination(int pos, int n, double **matrix)
     //выход из функции
     if (pos == n - 1) 
     {
-
-        // for(int i = 0; i < n; i++)
-        // {
-        //     for(int j = 0; j < n + 1; j ++)
-        //     {
-        //         printf("%lf ", matrix[i][j]);
-        //     }
-        //     printf("\n");
-
-        // }
 
         double *roots = (double*)malloc(sizeof(double) * n);
         double numerator = matrix[n - 1][n];
@@ -377,29 +356,13 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
             segmentBegin += h;
         }
 
-        // printf("RESULT MATRIX\n");
-        // for(int m = 0; m < k + 1; m ++)
-        // {
-        //     for(int s = 0; s < n; s ++)
-        //     {
-        //         printf("%lf ", result[m][s]);
-        //     }
-        //     printf("\n");
-        // }
-        // printf("\n");
-
-
-        // printf("ITERATION: %d\n", counter++);
-
         for(int m = 0; m < n; m ++)
         {
             for(int i = 0; i < k; i ++)
             {   
                 accuracy += accuracyMatrix[i][m] * accuracyMatrix[i][m];
-                //printf("SEGMENT %d ACCURACY: %lf\n", i + 1, accuracyMatrix[i][m]);
             }
             accuracy = sqrt(accuracy) / k;
-            // printf("|%.10lf\n", accuracy);
             if(accuracy > e)
             {
                 accuracyFlag = 0;
@@ -415,7 +378,6 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     segmentBegin = a;
     } while(accuracyFlag == 0);
 
-    //printf("K MULTIPLIER: %d\n", iterationsCount);
     *k1 = iterationsCount * k;
     free(nextValueLine);
     for(int i = 0; i < k; i ++)
@@ -460,12 +422,11 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
     y_temp = (double*)malloc(n * sizeof(double));
     y_new_temp = (double*)malloc(n * sizeof(double));
     y_super_new_temp = (double*)malloc(n * sizeof(double));
-    k1_line = (double*)malloc(n * sizeof(double));//массив из к1 для каждой функции из системы
+    k1_line = (double*)malloc(n * sizeof(double));
     k2_line = (double*)malloc(n * sizeof(double));
     k3_line = (double*)malloc(n * sizeof(double));
     k4_line = (double*)malloc(n * sizeof(double));
 
-    // result_line = (double*)malloc((n + 1) * sizeof(double));
     result_line = (double*)malloc(n * sizeof(double));
     output = (double*)malloc((n + 1) * sizeof(double));
 
@@ -483,7 +444,6 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
         double x_1 = x_temp + Runge.a2 * h;
         double x_2 = x_temp + Runge.a3 * h;
         double x_3 = x_temp + Runge.a4 * h;
-        //result_line[0] = x_temp;
 
         for (int j = 0; j < n; j++) 
         {
@@ -491,7 +451,6 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
             k1_line[j] = f_result[j] * h;
 
             y_new_temp[j] = y_temp[j] + Runge.b21 * k1_line[j];
-            //printf("%lf| %lf| ", y_new_temp[j], k1_line[j]);
         }
 
         for (int j = 0; j < n; j++) 
@@ -504,20 +463,17 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
             f_result[j] = funk(j, x_1, y_super_new_temp);
             k2_line[j] = f_result[j] * h;
             y_new_temp[j] = y_temp[j] + Runge.b31 * k1_line[j] + Runge.b32 * k2_line[j];
-            //printf("%lf| %lf| ", y_new_temp[j], k2_line[j]);
         }
         for (int j = 0; j < n; j++) 
         {
             y_super_new_temp[j] = y_new_temp[j];
         }
 
-        //printf("\n");
         for (int j = 0; j < n; j++) 
         {
             f_result[j] = funk(j, x_2, y_super_new_temp);
             k3_line[j] = f_result[j] * h;
             y_new_temp[j] = y_temp[j] + Runge.b41 * k1_line[j] + Runge.b42 * k2_line[j] + Runge.b43 * k3_line[j];
-            //printf("%lf| %lf| ", y_new_temp[j], k3_line[j]);
 
         }
 
