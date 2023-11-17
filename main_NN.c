@@ -9,7 +9,7 @@
 
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
-void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
+void solveODE(int n, double a, double b, double e, int k, double* y0, double** result, int *k1);
 double* solveRunge(int n, double a, double b,  int k, double* y0);
 double* GaussElimination(int pos, int n, double **matrix);
 double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, int k, double* y0);
@@ -27,7 +27,7 @@ int main()
     int n = 2;
     double a = 0, b = 20;
     double e = 0.0000001;
-    int k = 50;
+    int k = 50, *k1 = (int*)malloc(sizeof(int));
     double y0Line[] = { 1, -2 };;
     double** result;
 
@@ -38,30 +38,13 @@ int main()
         result[i] = (double*)malloc((n + 1) * sizeof(double));
     }
 
-
-
-    // Чтение входных данных из файла
-    FILE* input = fopen("input.txt", "r");
-    if (input == NULL) 
-    {
-        fprintf(stderr, "Ошибка открытия файла входных данных.\n");
-        return 1;
-    }
-
-    /* fscanf(input, "%d %lf %lf %lf %d", &n, &a, &b, &e, &k);
-
-     y0 = (double *)malloc(n * sizeof(double));
-     if (y0 == NULL) {
-         fprintf(stderr, "Ошибка выделения памяти.\n");
-         fclose(input);
-         return 1;
-     }
-     fscanf(input, "%lf", &y0[0]);
-    */
-    solveODE(n, a, b, e, k, y0Line, result);
+    solveODE(n, a, b, e, k, y0Line, result, k1);
 
     double h = (b - a) / k;
     double temp_a = a;
+
+    printf("K1: %d\n", *k1);
+
     for(int i = 0; i < k + 1; i ++)
     {
         printf("%lf: ",temp_a);
@@ -73,7 +56,6 @@ int main()
         printf("\n");
     }
 
-    fclose(input);
     for(int i = 0; i < k + 1; i ++)
     {
         free(result[i]);
@@ -90,12 +72,9 @@ double funk(int i, double x, double* y)
     {
          case 0:
             result = sin(x) * y[0] + cos(x) * y[1]; 
-            //result = 2*x + y[0] - 3;
-            //result = ((3 * x + y[0] * y[0] * y[0] - 1)/y[0])*((3 * x + y[0] * y[0] * y[0] - 1)/y[0]);
-            
             break;
         case 1:
-            result = sin(x) * y[1] + cos(x) * y[0];  // Пример: y'[1] = sin(x) * y[1]
+            result = sin(x) * y[1] + cos(x) * y[0];
             break;
         default:
             return NAN;
@@ -129,14 +108,6 @@ double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, i
         leftLine[i] = solveRunge(n, segmentBegin, segmentEnd, k_change, y0);
     }
 
-
-    // for(int j = 0; j < n; j++)
-    // {
-    // printf("%lf ", leftLine[EXTRAPOLATION_MATRIX_SIZE - 1][j]);
-        
-    // }
-    // printf("|\n");
-
     double *extrapolationResult = (double*)malloc(sizeof(double) * n);
 
     for(int i = 0; i < n; i ++)
@@ -145,8 +116,6 @@ double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, i
         {
             matrix[j][EXTRAPOLATION_MATRIX_SIZE] = leftLine[j][i];
         }
-        
-        
         
         double**tempMatrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
         for (int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++) 
@@ -308,12 +277,12 @@ double* GaussElimination(int pos, int n, double **matrix)
     }
 }
 
-void solveODE(int n, double a, double b, double e, int k, double* y0, double** result) 
+void solveODE(int n, double a, double b, double e, int k, double* y0, double** result, int *k1) 
 {
     double  h = (b - a) / k, segmentBegin = a, segmentEnd, accuracy, 
     kNext = EXTRAPOLATION_MATRIX_SIZE, localSegmentBegin = segmentBegin, 
     localSegmentEnd;
-    int iterationsCount = 1, localIterationCount;
+    int iterationsCount = 1, localIterationCount, counter = 1;
     double *nextValueLine = (double*)malloc(sizeof(double) * n);
     double *iterationValue;
 
@@ -331,7 +300,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
     do
     {
-        printf("NEW ITERATION\n");
+        printf("ITERATION: %d\n", counter++);
         localIterationCount = iterationsCount;
 
         for(int m = 0; m < k; m ++)
@@ -422,10 +391,11 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
             }
         }
         
-
     segmentBegin = a;
     } while(accuracyFlag == 0);
 
+    //printf("K MULTIPLIER: %d\n", iterationsCount);
+    *k1 = iterationsCount * k;
     free(nextValueLine);
     for(int i = 0; i < k; i ++)
     {
