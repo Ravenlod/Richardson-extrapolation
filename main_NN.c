@@ -13,7 +13,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 double* solveRunge(int n, double a, double b,  int k, double* y0);
 double* GaussElimination(int pos, int n, double **matrix);
 double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, int k, double* y0);
-
+void graphViewer(int n, double a, double b, int k, double* y0, double** result);
 
 
 struct Runge
@@ -28,11 +28,15 @@ int main()
     double a = 0, b = 20;
     double e = 0.0000001;
     int k = 50, *k1 = (int*)malloc(sizeof(int));
-    double y0Line[] = { 1, -2 };;
-    double** result;
+    double *y0 = (double* )malloc(sizeof(double) * n);
+    double y0Line[] = { 1.0, -2.0 };
+    for(int i = 0; i < n; i ++)
+    {
+        y0[i] = y0Line[i];
+    }
+    double** result, **viewOutput;
 
     result = (double**)malloc((k + 1) * sizeof(double*));
-
     for (int i = 0; i <= k; i++) 
     {
         result[i] = (double*)malloc((n + 1) * sizeof(double));
@@ -55,6 +59,20 @@ int main()
         temp_a += h;
         printf("\n");
     }
+
+    viewOutput = (double**)malloc((*k1 + 1) * sizeof(double*));
+    for (int i = 0; i <= *k1; i++) 
+    {
+        viewOutput[i] = (double*)malloc((n + 1) * sizeof(double));
+    }
+    graphViewer(n, a, b, *k1, y0Line, viewOutput);
+
+
+    for(int i = 0; i < *k1 + 1; i ++)
+    {
+        free(viewOutput[i]);
+    }
+    free(viewOutput);
 
     for(int i = 0; i < k + 1; i ++)
     {
@@ -87,7 +105,7 @@ double funk(int i, double x, double* y)
 double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, int k, double* y0) 
 {
     double h = (segmentEnd - segmentBegin) / k;
-    double **leftLine = (double**)malloc(k * sizeof(double*));
+    double **leftLine = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
     double **matrix = (double**)malloc(EXTRAPOLATION_MATRIX_SIZE * sizeof(double*));
 
     for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++)
@@ -143,7 +161,7 @@ double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, i
 
         double *rootLine = GaussElimination(0,EXTRAPOLATION_MATRIX_SIZE,tempMatrix);
         double feedbackCheck = 0;
-        for(int j=0;j<EXTRAPOLATION_MATRIX_SIZE;j++){
+        for(int j = 0;j < EXTRAPOLATION_MATRIX_SIZE; j++){
             feedbackCheck += matrix[0][j] * rootLine[j];
         }
         
@@ -169,7 +187,7 @@ double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, i
         free(matrix[j]);
     }
         free(matrix);
-    for(int j = 0; j < k; j ++)
+    for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
     {
         free(leftLine[j]);
     }
@@ -333,6 +351,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
                     }
                     
                 }
+
                 if(s == 0)
                 {
                     for(int i = 0; i < n; i ++)
@@ -371,14 +390,13 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
 
         // printf("ITERATION: %d\n", counter++);
+
         for(int m = 0; m < n; m ++)
         {
             for(int i = 0; i < k; i ++)
             {   
                 accuracy += accuracyMatrix[i][m] * accuracyMatrix[i][m];
-                
                 //printf("SEGMENT %d ACCURACY: %lf\n", i + 1, accuracyMatrix[i][m]);
-
             }
             accuracy = sqrt(accuracy) / k;
             // printf("|%.10lf\n", accuracy);
@@ -406,9 +424,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     }
     free(accuracyMatrix);
 
-
 }
-
 
 double* solveRunge(int n, double a, double b, int k, double* y0) 
 {
@@ -509,7 +525,6 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
         {
             y_super_new_temp[j] = y_new_temp[j];
         }
-        //printf("\n");
         for (int j = 0; j < n; j++) 
         {
             f_result[j] = funk(j, x_3, y_super_new_temp);
@@ -518,7 +533,6 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
             y_temp[j] += Runge.c1 * k1_line[j] + Runge.c2 * k2_line[j] + Runge.c3 * k3_line[j] + Runge.c4 * k4_line[j];
             result_line[j] = y_temp[j];
         }
-        //printf("\n");
         x_temp = x_temp + h;
     }
 
@@ -532,4 +546,46 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
     free(output);
     free(f_result);
     return result_line;
+}
+
+void graphViewer(int n, double a, double b, int k, double* y0, double** result)
+{
+    double h = (b - a) / k, segmentBegin = a, segmentEnd, temp_a = a;
+    double *iterValue = (double*)malloc(sizeof(double) * n), *nextValue;
+    
+    for(int i = 0; i < n; i++)
+    {
+        iterValue[i] = y0[i];
+        result[0][i] = y0[i];
+    }
+    
+    for(int i = 0; i < k; i++)
+    {
+        segmentEnd = segmentBegin + h;
+        nextValue = RichardsonExtrapolation(n, segmentBegin, segmentEnd, 
+        ELEMENTS_COUNT_PER_SEGMENT, iterValue);
+        segmentBegin = segmentEnd;
+
+        for(int j = 0; j < n; j++)
+        {
+            result[i + 1][j] = nextValue[j];
+        }
+        free(iterValue);
+        iterValue = nextValue;
+
+    }
+
+    for(int i = 0; i < k + 1; i++)
+    {
+        printf("%lf ",temp_a);
+        temp_a += h;
+
+        for(int j = 0; j < n; j++)
+        {
+            printf("%lf ", result[i][j]);
+        }
+        printf("\n");
+
+    }
+    free(iterValue);
 }
