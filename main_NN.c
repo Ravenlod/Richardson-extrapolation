@@ -24,11 +24,11 @@ struct Runge
 
 int main() 
 {
-    int n = 2;
-    double a = 0, b = 20;
+    int n = 1;
+    double a = 0, b = 5;
     double e = 0.0000001;
     int k = 10;
-    double* y0;
+    double y0Line[] = { 1 };;
     double** result;
 
     result = (double**)malloc((k + 1) * sizeof(double*));
@@ -58,7 +58,6 @@ int main()
      }
      fscanf(input, "%lf", &y0[0]);
     */
-    double y0Line[] = { 1, -2};
     double **output = solveODE(n, a, b, e, k, y0Line, result);
 
     for(int i = 0; i < k + 1; i ++)
@@ -92,11 +91,12 @@ double funk(int i, double x, double* y)
         //     break;
 
          case 0:
-            result = sin(x) * y[0] + cos(x) * y[1];  // Пример: y'[0] = x * y[0]
+            //result = sin(x) * y[0] + cos(x) * y[1]; 
+            result = ((3 * x + y[0] * y[0] * y[0] - 1)/y[0])*((3 * x + y[0] * y[0] * y[0] - 1)/y[0]);
             break;
-        case 1:
+        /* case 1:
             result = sin(x) * y[1] + cos(x) * y[0];  // Пример: y'[1] = sin(x) * y[1]
-            break;
+            break; */
         default:
             return NAN;
     }
