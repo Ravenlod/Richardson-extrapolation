@@ -300,7 +300,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
     do
     {
-        printf("ITERATION: %d\n", counter++);
+        
         localIterationCount = iterationsCount;
 
         for(int m = 0; m < k; m ++)
@@ -368,6 +368,8 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
         // }
         // printf("\n");
 
+
+        // printf("ITERATION: %d\n", counter++);
         for(int m = 0; m < n; m ++)
         {
             for(int i = 0; i < k; i ++)
@@ -378,7 +380,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
             }
             accuracy = sqrt(accuracy) / k;
-            printf("|%.10lf\n", accuracy);
+            // printf("|%.10lf\n", accuracy);
             if(accuracy > e)
             {
                 accuracyFlag = 0;
