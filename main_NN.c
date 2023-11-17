@@ -9,7 +9,7 @@
 
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
-void solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
+double** solveODE(int n, double a, double b, double e, int k, double* y0, double** result);
 double* solveRunge(int n, double a, double b,  int k, double* y0);
 double* GaussElimination(int pos, int n, double **matrix);
 double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, int k, double* y0);
@@ -59,8 +59,22 @@ int main()
      fscanf(input, "%lf", &y0[0]);
     */
     double y0Line[] = { 1, -2};
-    solveODE(n, a, b, e, k, y0Line, result);
+    double **output = solveODE(n, a, b, e, k, y0Line, result);
 
+    for(int i = 0; i < k + 1; i ++)
+    {
+        for(int j = 0; j < n; j ++)
+        {
+            printf("%lf ", output[i][j]);
+        }
+        printf("\n");
+    }
+
+    for(int i = 0; i < k + 1; i ++)
+    {
+        free(output[i]);
+    }
+    free(output);
     return 0;
 }
 
@@ -278,7 +292,7 @@ double* GaussElimination(int pos, int n, double **matrix)
     }
 }
 
-void solveODE(int n, double a, double b, double e, int k, double* y0, double** result) 
+double** solveODE(int n, double a, double b, double e, int k, double* y0, double** result) 
 {
     double  h = (b - a) / k, segmentBegin = a, segmentEnd, accuracy, 
     kNext = EXTRAPOLATION_MATRIX_SIZE, localSegmentBegin = segmentBegin, 
@@ -408,6 +422,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     //     free(resultedOutput[i]);
     // }
     // free(resultedOutput);
+    return resultedOutput;
 }
 
 
@@ -531,5 +546,6 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
     free(k3_line);
     free(k4_line);
     free(output);
+    free(f_result);
     return result_line;
 }
