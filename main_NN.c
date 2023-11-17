@@ -43,7 +43,7 @@ int main()
     double h = (b - a) / k;
     double temp_a = a;
 
-    printf("K1: %d\n", *k1);
+    printf("n:%d a:%lf b:%lf e:%lf k:%d K1:%d\n", n, a, b, e, k, *k1);
 
     for(int i = 0; i < k + 1; i ++)
     {
