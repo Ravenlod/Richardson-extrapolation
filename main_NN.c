@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define EXTRAPOLATION_MATRIX_SIZE 5
-#define ELEMENTS_COUNT_PER_SEGMENT 25
+#define ELEMENTS_COUNT_PER_SEGMENT 10
 #define K_MULTIPLIER 2
 
 //#include "odu_NN.h"
@@ -56,6 +56,9 @@ int main()
         printf("\n");
     }
 
+
+
+
     for(int i = 0; i < k + 1; i ++)
     {
         free(result[i]);
@@ -94,21 +97,43 @@ double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, i
     {
         matrix[i] = (double *)malloc((EXTRAPOLATION_MATRIX_SIZE + 1) * sizeof(double));
 
-        for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j ++)
+        matrix[i][0] = 1;
+        // for(int j = 1, multiply = 1; j < EXTRAPOLATION_MATRIX_SIZE; j +=2, multiply++)
+        // {
+        //     matrix[i][j] = cos(multiply * h); //exp( pow(2, j) * h);
+        //     //printf("%lf ", matrix[i][j]);
+        // }
+        // for(int j = 2, multiply = 1; j < EXTRAPOLATION_MATRIX_SIZE; j +=2, multiply++)
+        // {
+        //     matrix[i][j] = sin(multiply * h); 
+        // }
+        for(int j=1, multiply = 1;j<EXTRAPOLATION_MATRIX_SIZE;multiply++,j++)
         {
-            matrix[i][j] = exp( pow(2, j) * h);
-            //printf("%lf ", matrix[i][j]);
+            matrix[i][j] = cos(j * h)+sin(j * h);
         }
 
         //printf("\n");
         h /= 2;
     }
-
+    // printf("************Matrix\n");
+    // for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++){
+    //     for(int j = 0; j < EXTRAPOLATION_MATRIX_SIZE; j++){
+    //         printf("%lf ", matrix[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("************Left\n");
     for(int i = 0, k_change = k; i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
     {
         leftLine[i] = solveRunge(n, segmentBegin, segmentEnd, k_change, y0);
     }
-
+    // for(int i = 0; i < EXTRAPOLATION_MATRIX_SIZE; i++){
+    //     for(int j = 0; j < n; j++){
+    //         printf("%lf ", matrix[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("************\n");
     double *extrapolationResult = (double*)malloc(sizeof(double) * n);
 
     for(int i = 0; i < n; i ++)
@@ -341,8 +366,9 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
                     }
                     free(iterationValue);
                 }
-
-
+                                // if (s == 1) {//Я ИЗмЕНИЛ
+                                //         free(iterationValue);
+                                //     }//Я ИЗмЕНИЛ
                 localIterationCount *= 2;
             }
             localIterationCount = iterationsCount;
