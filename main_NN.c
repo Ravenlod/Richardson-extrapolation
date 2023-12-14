@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #define EXTRAPOLATION_MATRIX_SIZE 5
 #define ELEMENTS_COUNT_PER_SEGMENT 25
-
 //#include "odu_NN.h"
 double funk(int i, double x, double* y);
 void solveODE(int n, double a, double b, double e, int k, double* y0, double** result, int *k1);
@@ -14,12 +13,6 @@ double* GaussElimination(int pos, int n, double **matrix);
 double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, int k, double* y0);
 void graphViewer(int n, double a, double b, int k, double* y0, double** result, int k_old);
 
-
-struct Runge
-{
-    int k;
-    double a, b, a2, a3, a4, b21, b31, b32, b41, b42, b43, c1, c2, c3, c4;
-};
 
 int main() 
 {
@@ -33,6 +26,9 @@ int main()
     {
         fscanf(inputVars, "%lf", &y0[i]);
     }
+
+    // double* out = solveRunge(n, a, b, k, y0);
+    // printf("Runge: %lf %lf\n", out[0], out[1]);
 
     double** result, **viewOutput;
 
@@ -66,6 +62,7 @@ int main()
         viewOutput[i] = (double*)malloc((n + 1) * sizeof(double));
     }
     graphViewer(n, a, b, *k1, y0, viewOutput, k);
+    //printf("%lf|%lf", y0[0], y0[1]);
 
 
     for(int i = 0; i < *k1 + 1; i ++)
@@ -90,7 +87,7 @@ double funk(int i, double x, double* y)
 
     switch (i) 
     {
-         case 0:
+        case 0:
             result = sin(x) * y[0] + cos(x) * y[1]; 
             break;
         case 1:
@@ -126,6 +123,7 @@ double* RichardsonExtrapolation(int n, double segmentBegin, double segmentEnd, i
     for(int i = 0, k_change = k; i < EXTRAPOLATION_MATRIX_SIZE; i++, k_change *= 2)
     {
         leftLine[i] = solveRunge(n, segmentBegin, segmentEnd, k_change, y0);
+        //printf("RE:%lf:\n", y0[0]);
     }
 
     double *extrapolationResult = (double*)malloc(sizeof(double) * n);
@@ -285,7 +283,6 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
     int iterationsCount = 1, localIterationCount, counter = 1;
     double *nextValueLine = (double*)malloc(sizeof(double) * n);
     double *iterationValue;
-
     int accuracyFlag = 1;
     double **accuracyMatrix = (double**)malloc(sizeof(double*) * k);
 
@@ -328,7 +325,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
                         free(iterationValue);
                     } 
                 }
-
+                
                 if(s == 0)
                 {
                     for(int i = 0; i < n; i ++)
@@ -385,118 +382,84 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
 
 double* solveRunge(int n, double a, double b, int k, double* y0) 
 {
-    struct Runge Runge;
-    Runge.a2 = 0.2;
-    Runge.a3 = 0.6;
-    Runge.a4 = 1;
-    Runge.b21 = Runge.a2;
+    double **fButcherTableau = (double**)malloc(5 * sizeof(double*));
 
-    Runge.b32 = (Runge.a3 * (Runge.a3 - Runge.a2)) / (2 * Runge.a2 * (1 - 2 * Runge.a2));
-    Runge.b31 = Runge.a3 - Runge.b32;
+    fButcherTableau[0] = (double*)malloc(3  * sizeof(double));
+    fButcherTableau[1] = (double*)malloc(1  * sizeof(double));
+    fButcherTableau[2] = (double*)malloc(2  * sizeof(double));
+    fButcherTableau[3] = (double*)malloc(3  * sizeof(double));
+    fButcherTableau[4] = (double*)malloc(4  * sizeof(double));
 
-    Runge.c2 = (2 * Runge.a3 - 1) / (12 * Runge.a2 * (Runge.a3 - Runge.a2) * (1 - Runge.a2));
-    Runge.c3 = (2 * Runge.a2 - 1) / (12 * Runge.a3 * (Runge.a2 - Runge.a3) * (1 - Runge.a3));
-    Runge.c4 = (6 * Runge.a2 * Runge.a3 - 4 * Runge.a2 - 4 * Runge.a3 + 3) / (12 * (1 - Runge.a2) * (1 - Runge.a3));
-    Runge.c1 = 1 - Runge.c2 - Runge.c3 - Runge.c4;
-    Runge.b42 = (Runge.c2 * (1 - Runge.a2) - Runge.c3 * Runge.b32) / Runge.c4;
+    fButcherTableau[0][0] = 0.262;
+    fButcherTableau[0][1] = 0.160457849033965;
+    fButcherTableau[0][2] = 1;
+    fButcherTableau[1][0] = fButcherTableau[0][0];
+    fButcherTableau[2][1] = (fButcherTableau[0][1] * (fButcherTableau[0][1] - fButcherTableau[0][0])) / (2 * fButcherTableau[0][0] * (1 - 2 * fButcherTableau[0][0]));
+    fButcherTableau[2][0] = fButcherTableau[0][1] - fButcherTableau[2][1];
+    fButcherTableau[4][1] = (2 * fButcherTableau[0][1] - 1) / (12 * fButcherTableau[0][0] * (fButcherTableau[0][1] - fButcherTableau[0][0]) * (1 - fButcherTableau[0][0]));
+    fButcherTableau[4][2] = (2 * fButcherTableau[0][0] - 1) / (12 * fButcherTableau[0][1] * (fButcherTableau[0][0] - fButcherTableau[0][1]) * (1 - fButcherTableau[0][1]));
+    fButcherTableau[4][3] = (6 * fButcherTableau[0][0] *fButcherTableau[0][1] - 4 * fButcherTableau[0][0] - 4 * fButcherTableau[0][1] + 3) / (12 * (1 - fButcherTableau[0][0]) * (1 - fButcherTableau[0][1]));
+    fButcherTableau[3][1] = (fButcherTableau[4][1] * (1 - fButcherTableau[0][0]) - fButcherTableau[4][2] * fButcherTableau[2][1]) / fButcherTableau[4][3];
+    fButcherTableau[3][2] = (fButcherTableau[4][2] * (1 - fButcherTableau[0][1]) / fButcherTableau[4][3]);
+    fButcherTableau[3][0] = 1 - fButcherTableau[3][1] - fButcherTableau[3][2];
+    fButcherTableau[4][0] = 1 - fButcherTableau[4][1] - fButcherTableau[4][2] - fButcherTableau[4][3];
+    
+    //printf("b:%lf %lf %lf %lf %lf %lf\n", fButcherTableau[1][0], fButcherTableau[2][0], 
+    //fButcherTableau[2][1], fButcherTableau[3][0], fButcherTableau[3][1], fButcherTableau[3][2]);
+    //printf("c: %lf %lf %lf %lf\n", fButcherTableau[4][0], fButcherTableau[4][1], 
+    //fButcherTableau[4][2], fButcherTableau[4][3]);
 
-    Runge.b43 = (Runge.c3 * (1 - Runge.a3)) / Runge.c4;
-    Runge.b41 = 1 - Runge.b42 - Runge.b43;
+    double currentX = a, *localY = (double*)malloc(n * sizeof(double)), h = (b - a) / ELEMENTS_COUNT_PER_SEGMENT, localX;
+    double **kMatrix = (double**)malloc( n * sizeof(double*)), *currentY = (double*)malloc(n * sizeof(double));
 
-    double h = (b - a) / k;
-
-    double* f_result;
-    double x_temp;
-
-    double* y_temp, * y_new_temp, * y_super_new_temp;
-    double* k1_line, * k2_line, * k3_line, * k4_line;
-    double* result_line;
-
-    double* output;
-
-    y_temp = (double*)malloc(n * sizeof(double));
-    y_new_temp = (double*)malloc(n * sizeof(double));
-    y_super_new_temp = (double*)malloc(n * sizeof(double));
-    k1_line = (double*)malloc(n * sizeof(double));
-    k2_line = (double*)malloc(n * sizeof(double));
-    k3_line = (double*)malloc(n * sizeof(double));
-    k4_line = (double*)malloc(n * sizeof(double));
-
-    result_line = (double*)malloc(n * sizeof(double));
-    output = (double*)malloc((n + 1) * sizeof(double));
-
-    for (int i = 0; i < n; i++) 
+    for(int i = 0; i < n; i ++)
     {
-        y_temp[i] = y0[i];
+        localY[i] = y0[i];
+        currentY[i] = y0[i];
+        kMatrix[i] = (double*)malloc(4 * sizeof(double));
     }
 
-    x_temp = a;
 
-    f_result = (double*)malloc(k * sizeof(double));
-    for (int i = 0; i < k + 1; i++) 
+    for(int i = 0; i < ELEMENTS_COUNT_PER_SEGMENT; i ++)
     {
-
-        double x_1 = x_temp + Runge.a2 * h;
-        double x_2 = x_temp + Runge.a3 * h;
-        double x_3 = x_temp + Runge.a4 * h;
-
-        for (int j = 0; j < n; j++) 
+        localX = currentX;
+        for(int j = 0; j < n; j ++)
         {
-            f_result[j] = funk(j, x_temp, y_temp);
-            k1_line[j] = f_result[j] * h;
-
-            y_new_temp[j] = y_temp[j] + Runge.b21 * k1_line[j];
+            localY[j] = currentY[j];
+        }
+        for(int j = 0; j < 4; j ++)
+        {
+            for(int s = 0; s < n; s ++)
+            {
+                kMatrix[s][j] = funk(s, localX, localY) * h;
+            }
+            if(j < 3)
+            {
+                for(int m = 0; m < n; m ++)
+                {
+                    localY[m] = currentY[m];
+                    for(int s = 0; s <= j; s ++)
+                    {
+                        localY[m] += fButcherTableau[j + 1][s] * kMatrix[m][s];
+                    }
+                }
+                localX = currentX + fButcherTableau[0][j] * h;
+            }
+           
         }
 
-        for (int j = 0; j < n; j++) 
+        for(int j = 0; j < n; j ++)
         {
-            y_super_new_temp[j] = y_new_temp[j];
-        }
-        //printf("\n");
-        for (int j = 0; j < n; j++) 
-        {
-            f_result[j] = funk(j, x_1, y_super_new_temp);
-            k2_line[j] = f_result[j] * h;
-            y_new_temp[j] = y_temp[j] + Runge.b31 * k1_line[j] + Runge.b32 * k2_line[j];
-        }
-        for (int j = 0; j < n; j++) 
-        {
-            y_super_new_temp[j] = y_new_temp[j];
-        }
 
-        for (int j = 0; j < n; j++) 
-        {
-            f_result[j] = funk(j, x_2, y_super_new_temp);
-            k3_line[j] = f_result[j] * h;
-            y_new_temp[j] = y_temp[j] + Runge.b41 * k1_line[j] + Runge.b42 * k2_line[j] + Runge.b43 * k3_line[j];
-
+            currentY[j] += fButcherTableau[4][0] * kMatrix[j][0] + fButcherTableau[4][1] * kMatrix[j][1] + 
+            fButcherTableau[4][2] * kMatrix[j][2] + fButcherTableau[4][3] * kMatrix[j][3];         
         }
-
-        for (int j = 0; j < n; j++) 
-        {
-            y_super_new_temp[j] = y_new_temp[j];
-        }
-        for (int j = 0; j < n; j++) 
-        {
-            f_result[j] = funk(j, x_3, y_super_new_temp);
-            k4_line[j] = f_result[j] * h;
-
-            y_temp[j] += Runge.c1 * k1_line[j] + Runge.c2 * k2_line[j] + Runge.c3 * k3_line[j] + Runge.c4 * k4_line[j];
-            result_line[j] = y_temp[j];
-        }
-        x_temp = x_temp + h;
+        currentX += h;
     }
-
-    free(y_temp);
-    free(y_new_temp);
-    free(y_super_new_temp);
-    free(k1_line);
-    free(k2_line);
-    free(k3_line);
-    free(k4_line);
-    free(output);
-    free(f_result);
-    return result_line;
+    //printf("%lf %lf\n", currentY[0], currentY[1]);
+    //printf("||%lf||\n", currentX);
+    //printf("%lf, %lf %lf a:%lf b:%lf\n", h, y0[0], y0[1]);
+    return currentY;
 }
 
 void graphViewer(int n, double a, double b, int k, double* y0, double** result, int k_old)
