@@ -147,7 +147,7 @@ void graphViewer(int n, double a, double b, int k, double* y0, double** result, 
     
     for(int m = 0; m < n; m++)
     {
-        const char fileNameConst[] = {'v', 'a', 'r', '/','l', 'i', 'n', 'k', (char)(m + 48), '.', 's', 'v', 'g', '\0'};
+        const char fileNameConst[] = {'o', 'p', 't', '/','l', 'i', 'n', 'k', (char)(m + 48), '.', 's', 'v', 'g', '\0'};
         FILE *svgFile = fopen(fileNameConst, "w");
 
         int triangleUp[][2]  = {{0 - 5, 15}, {5 - 5, 0}, {10 - 5, 15}};
