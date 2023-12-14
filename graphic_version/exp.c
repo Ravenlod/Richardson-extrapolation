@@ -583,7 +583,7 @@ void graphViewer(int n, double a, double b, int k, double* y0, double** result)
         printf("\n");
     }
     for(int i = 0; i < n; i++){
-        fprintf(graphic, "set term wxt %d\nset xlabel \"x\"\nset xlabel \"y\"\nplot \"data.txt\" using 1:%d with linespoints ls 1 title \'y%d(x)\'\n", i+1, i+2, i+1);
+        fprintf(graphic, "set term wxt %d\nset xlabel \"x\"\nset xlabel \"y\"\nplot \"result.txt\" using 1:%d with linespoints ls 1 title \'y%d(x)\'\n", i+1, i+2, i+1);
     }
     fprintf(graphic, "pause -1");
     free(iterValue);
