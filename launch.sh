@@ -1,7 +1,12 @@
 #!/bin/bash
-
 echo "RE-exp solver"
+SOURCE_DIR="src"
+INCLUDE_DIR="include"
+OUTPUT_DIR="opt"
+OUTPUT_FILE="$OUTPUT_DIR/main_NN"
 
-gcc -o opt/main_NN -I include/ src/main_NN.c src/odu_NN.c src/func_NN.c -lm
-
-opt/main_NN
+if gcc -o "$OUTPUT_FILE" -I "$INCLUDE_DIR" "$SOURCE_DIR"/main_NN.c "$SOURCE_DIR"/odu_NN.c "$SOURCE_DIR"/func_NN.c -lm; then
+    "$OUTPUT_FILE"
+else
+    echo "Compilation failed"
+fi
