@@ -310,9 +310,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
                 for(int j = 0; j < n; j ++ )
                 {
                     nextValueLine[j] = result[m][j];
-                    //printf("%lf ", result[m][j]);
                 }
-                //printf("\n___START___\n");
                 localSegmentBegin = segmentBegin;
                 for(int i = 0; i < localIterationCount; i ++)
                 {
@@ -320,7 +318,6 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
                     localSegmentEnd = localSegmentBegin + h / localIterationCount;
                     iterationValue = RichardsonExtrapolation(n, localSegmentBegin, 
                                         localSegmentEnd, kNext , nextValueLine);
-                    //kNext *= 2;
                     localSegmentBegin = localSegmentEnd;
                     for(int j = 0; j < n; j ++ )
                     {
@@ -329,8 +326,7 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
                     if(i < localIterationCount - 1)
                     {
                         free(iterationValue);
-                    }
-                    
+                    } 
                 }
 
                 if(s == 0)
@@ -342,15 +338,12 @@ void solveODE(int n, double a, double b, double e, int k, double* y0, double** r
                     free(iterationValue);
                 }
 
-
                 localIterationCount *= 2;
             }
             localIterationCount = iterationsCount;
-            //kNext = EXTRAPOLATION_MATRIX_SIZE;
             for(int s = 0; s < n; s ++)
             {
                 result[m + 1][s] = iterationValue[s];
-                //printf("%lf %lf\n", accuracyMatrix[m][s], result[m+1][s]);
                 accuracyMatrix[m][s] -= iterationValue[s]; 
 
             }
