@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define EXTRAPOLATION_MATRIX_SIZE 3
+#define EXTRAPOLATION_MATRIX_SIZE 5
 #define ELEMENTS_COUNT_PER_SEGMENT 25
 
 //#include "odu_NN.h"
@@ -23,16 +23,17 @@ struct Runge
 
 int main() 
 {
-    int n = 2;
-    double a = 0, b = 20;
-    double e = 0.0000001;
-    int k = 50, *k1 = (int*)malloc(sizeof(int));
-    double *y0 = (double* )malloc(sizeof(double) * n);
-    double y0Line[] = { 1.0, -2.0 };
+    int n, k, *k1 = (int*)malloc(sizeof(int));
+    double a, b, e, *y0;
+    FILE *inputVars = fopen("input.txt", "r");
+    fscanf(inputVars, "%d %lf %lf %lf %d", &n, &a, &b, &e, &k);
+
+    y0 = (double*)malloc(n * sizeof(double));
     for(int i = 0; i < n; i ++)
     {
-        y0[i] = y0Line[i];
+        fscanf(inputVars, "%lf", &y0[i]);
     }
+
     double** result, **viewOutput;
 
     result = (double**)malloc((k + 1) * sizeof(double*));
@@ -41,7 +42,7 @@ int main()
         result[i] = (double*)malloc((n + 1) * sizeof(double));
     }
 
-    solveODE(n, a, b, e, k, y0Line, result, k1);
+    solveODE(n, a, b, e, k, y0, result, k1);
 
     double h = (b - a) / k;
     double temp_a = a;
@@ -64,7 +65,7 @@ int main()
     {
         viewOutput[i] = (double*)malloc((n + 1) * sizeof(double));
     }
-    graphViewer(n, a, b, *k1, y0Line, viewOutput, k);
+    graphViewer(n, a, b, *k1, y0, viewOutput, k);
 
 
     for(int i = 0; i < *k1 + 1; i ++)
@@ -79,6 +80,7 @@ int main()
     }
     free(result);
     free(k1);
+    free(y0);
     return 0;
 }
 
@@ -506,8 +508,6 @@ double* solveRunge(int n, double a, double b, int k, double* y0)
 
 void graphViewer(int n, double a, double b, int k, double* y0, double** result, int k_old)
 {
-    FILE* graphOutput = fopen("graph.txt", "w");
-
     double h = (b - a) / k, segmentBegin = a, segmentEnd, temp_a = a;
     double *iterValue = (double*)malloc(sizeof(double) * n), *nextValue;
     
@@ -669,7 +669,4 @@ void graphViewer(int n, double a, double b, int k, double* y0, double** result, 
     free(min);
     free(max);
     free(iterValue);
-
-    fclose(graphOutput);
-
 }
