@@ -12,3 +12,13 @@ git.vcxproj.user
 main_NN
 a.exe
 main_NN.o
+
+# Файлы библиотек
+/gnuplot
+
+# Файлы автогенерации
+data.txt
+data.txt:Zone.Identifier
+plot_script.gnu
+plot_script.gnu:Zone.Identifier
+
